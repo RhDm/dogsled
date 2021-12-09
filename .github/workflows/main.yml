@@ -21,8 +21,8 @@ jobs:
       - run: |
           conda info
           conda list
-          pytest --cov-config=dogsled/tests/.coveragerc --cov=retriever --cov-report=xml
+          pytest --cov-config=dogsled/tests/.coveragerc --cov=dogsled --cov-report=xml
       - uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-      
+
