@@ -1,0 +1,9 @@
+/* some custom mods */
+
+.fa-twitter-square:before {
+   color: #363636 !important;
+}
+
+.strike {
+   text-decoration: line-through;
+ }

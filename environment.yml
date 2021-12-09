@@ -1,0 +1,26 @@
+# conda test environment with QuPath (sdvillal), OpenSLide and vips
+#
+
+name: dogsled
+
+channels:
+  - sdvillal
+  - conda-forge
+
+dependencies:
+  - python=3.9
+  - pip
+  - openslide
+  - qupath
+  - opencv
+  - openslide-python==1.1.2
+  - Pillow==8.4.0
+  - numpy==1.21.4
+  - psutil==5.8.0    
+  - pyvips==2.1.16
+  - dynaconf==3.1.7
+  - pytest>=6
+  - pytest-cov==3.0.0
+  - pip:
+    - paquo
+    - "-e ."
