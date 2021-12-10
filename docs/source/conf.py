@@ -64,7 +64,7 @@ html_theme_options = {
     "icon_links": [
         {
             "name": "GitHub",
-            "url": "https://github.com/RhDm/digsled",
+            "url": "https://github.com/RhDm/dogsled",
             "icon": "fab fa-github-square",
         },
         {
