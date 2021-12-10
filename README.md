@@ -3,7 +3,7 @@
 <br>
 
 [![tests workflow](https://github.com/RhDm/dogsled/actions/workflows/main.yml/badge.svg)](https://github.com/RhDm/dogsled/actions/workflows/main.yml)
-[![codecov](https://codecov.io/gh/RhDm/dogsled/branch/main/graph/badge.svg?token=IE4K5V5FGW)](https://codecov.io/gh/RhDm/dogsled)
+[![codecov](https://codecov.io/gh/RhDm/dogsled/branch/main/graph/badge.svg?token=WMIQ6MD1UK)](https://codecov.io/gh/RhDm/dogsled)
 
 <br>
 
@@ -11,6 +11,10 @@
 
 
 Why *dogsled*? Well, first of all, because of the dogs. Second, because together many dogs can push a cargo too heavy for one dog to handle. Similarily, dogsled divides heavy computations into smaller ones. As with many algorithms and life situations, divide and conquer, right?
+
+# `dogsled` is in late alpha phase
+if you spot a bug or have a suggestion feel free to open an issue
+if wish to test `dogsled` and need the data, feel free to drop me an email at: dmitri.stepanov1@gmail.com
 
 ## Quirks and features
 
