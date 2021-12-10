@@ -4,6 +4,7 @@
 
 [![tests workflow](https://github.com/RhDm/dogsled/actions/workflows/main.yml/badge.svg)](https://github.com/RhDm/dogsled/actions/workflows/main.yml)
 [![codecov](https://codecov.io/gh/RhDm/dogsled/branch/main/graph/badge.svg?token=WMIQ6MD1UK)](https://codecov.io/gh/RhDm/dogsled)
+[![Documentation Status](https://readthedocs.org/projects/dogsled/badge/?version=latest)](https://dogsled.readthedocs.io/en/latest/?badge=latest)
 
 <br>
 
