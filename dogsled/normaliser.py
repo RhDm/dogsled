@@ -25,7 +25,7 @@ from dogsled.resources import ResourceChecker
 Image.MAX_IMAGE_PIXELS = DEFAULTS['PIL_MAX_IMAGE_PIXELS']
 
 LOGGER = logging.getLogger(__name__)
-# not setting the leven in config.py to filter vips etc messages
+# not setting the level in config.py to filter vips etc messages
 LOGGER.setLevel(logging.DEBUG)
 
 try:
@@ -42,7 +42,7 @@ except ModuleNotFoundError:  # pragma: no cover
         pass
 
 
-if 'line_profiler' not in dir() or 'memory_profiler' not in dir():
+if 'line_profiler' not in dir() and 'profile' not in dir():
     def profile(func):
         '''line_profiler/memory_profiler decorator deactivation'''
         return func

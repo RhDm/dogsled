@@ -1,4 +1,4 @@
-<img src="https://github.com/RhDm/dogsled/blob/main/docs/source/_static/dogsled_logo.svg" width="300">
+<img src="https://raw.githubusercontent.com/RhDm/dogsled/main/docs/source/_static/dogsled_logo.svg" width="300">
 
 <br>
 
@@ -33,7 +33,7 @@ Currently, `dogsled` can:
 
 <br>
 
-<img src="https://github.com/RhDm/dogsled/blob/main/docs/source/_static/graph.jpeg" width="800">
+<img src="https://raw.githubusercontent.com/RhDm/dogsled/main/docs/source/_static/graph.jpeg" width="800">
 
 <br>
 

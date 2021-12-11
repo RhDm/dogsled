@@ -149,7 +149,7 @@ cython_debug/
 # Ignore dynaconf secret files
 .secrets.*
 
-# Slides usef for testing
+# Slides used for testing
 *.svs
 *.tif
 *.tiff
@@ -164,3 +164,8 @@ cython_debug/
 # Data for testing
 dogsled/tests/data/*
 !dogsled/tests/data/normalised/.gitkeep
+
+# Profiling data
+*.log
+*.lprof
+*.stats
