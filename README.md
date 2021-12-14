@@ -29,7 +29,7 @@ Currently, `dogsled` can:
 - create thumbnails of all slides (pre-normalised and normalised)
 
 ## Documentation
-`dogsled` about page, quickstart, installation and API can be found at [dogsled.readthedocs.io](LINK_HERE)
+`dogsled` about page, quickstart, installation and API can be found at [dogsled.readthedocs.io](https://dogsled.readthedocs.io)
 
 <br>
 
