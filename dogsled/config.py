@@ -43,4 +43,5 @@ LOGGING_DEVEL_CONFIG = {
 }
 
 LOGGING_RELEASE_CONFIG = LOGGING_DEVEL_CONFIG
-LOGGING_RELEASE_CONFIG['formatters']['standard']['format']='{asctime} {module} {levelname}: [ {message} ]'
+LOGGING_RELEASE_CONFIG['formatters']['standard'][
+    'format'] = '{asctime} {module} {levelname}: [ {message} ]'

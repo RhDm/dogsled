@@ -6,17 +6,19 @@ https://libvips.github.io/pyvips/enums.html#pyvips.enums.ForeignTiffCompression
  none, jpeg, deflate, packbits, ccittfax4, lzw, webp, zstd, jp2k
 '''
 import numpy as np
+import numba
 
 # TODO implement enum for some parameters
 # TODO refine ram to megapixel mapping
 DEFAULTS = {
     'show_results': False,
-    'ram_megapixel': {8000: 12000,
-                      8001: 24500},  # {MB: pixel} under 8000MB: 12000px; over: 24500px
+    'ram_megapixel': {12000: 12000,
+                      12001: 24500},  # {MB: pixel} under 8000MB: 12000px; over: 24500px
     # normalisation parameters:
-    # 'output_type' = ['norm', 'he', 'eo'],
+    # 'output_type' : ['norm', 'he', 'eo'],
     'output_type': ['norm'],
-    'dtype': np.float16,
+    'dtype': np.float32,
+    'numba_dtype': numba.float32,
     'normalising_c': 255,  # normalising constant
     # (alpha_th - (100 - alpha_th)) percentiles for stain vectors
     'alpha': 0.0001,
@@ -25,14 +27,15 @@ DEFAULTS = {
     'remove_temporary_files': True,
     'jpeg_quality': 95,
     'vips_tiff_compression': 'lzw',
-    'PIL_MAX_IMAGE_PIXELS': 2000000000,
     'thumbnail': True,
     'thumbnail_max_side': 6000,
-    'prefer_vips': False,
+    'vips_sticher': False,
     'OpenSlide_formats': ['.svs', '.tif', '.tiff', '.scn',
                           '.vms', '.vmu', '.ndpi', '.mrxs',
                           '.svslide', '.bif'],
-    'first_tile': 'middle'
+    'first_tile': 'middle',
+    'libvips_url': 'https://github.com/libvips/build-win64-mxe/releases/download/v8.12.1/vips-dev-w64-web-8.12.1-static.zip',
+    'libvips_md5': 'b5c4e55ad7203f45568e2ed0c6ad93d8'
 }
 
 # pseudo-maximum scaled?

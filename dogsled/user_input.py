@@ -26,7 +26,7 @@ from dogsled.slides import QuPathSlides
 from dogsled.errors import UserInputError
 from dogsled.paths import PathChecker, PathCreator
 from dogsled.defaults import DEFAULTS
-# TODO extend support to other OpenSlide supported formats
+# TODO extend support to other OpenSlide formats
 
 LOGGER = logging.getLogger(__name__)
 

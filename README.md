@@ -8,7 +8,7 @@
 
 <br>
 
-`dogsled` is an open-source Python package that does only one thing: Macenko [1] stain normalisation of large medical slides readable by OpenSlide. It generates either JPEG or TIFF normalised image
+`dogsled` is an open-source Python package that does only one thing: Macenko [1] stain normalisation of large medical slides (OpenSlide formats). It generates either JPEG or TIFF normalised image
 
 
 Why *dogsled*? Well, first of all, because of the dogs. Second, because together many dogs can push a cargo too heavy for one dog to handle. Similarily, dogsled divides heavy computations into smaller ones. As with many algorithms and life situations, divide and conquer, right?

@@ -4,6 +4,7 @@ import pytest
 import psutil
 
 from dogsled.resources import ResourceEstimator, ResourceChecker
+from dogsled.defaults import DEFAULTS
 
 LOGGER = logging.getLogger(__name__)
 
@@ -23,10 +24,10 @@ def test_space_estimator(test_slides, space_required):
 
 def test_tile_size():
     ram_available = psutil.virtual_memory().available >> 20
-    if ram_available <= 8000:
-        side = 12000
+    if ram_available <= min(DEFAULTS['ram_megapixel'].keys()):
+        side = DEFAULTS['ram_megapixel'][min(DEFAULTS['ram_megapixel'].keys())]
     else:
-        side = 24500
+        side = DEFAULTS['ram_megapixel'][max(DEFAULTS['ram_megapixel'].keys())]
     assert side == ResourceChecker().tile_size
 
 

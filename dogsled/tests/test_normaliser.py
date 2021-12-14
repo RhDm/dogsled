@@ -5,16 +5,12 @@ from distutils import dir_util
 
 import numpy as np
 import pytest
-from openslide import OpenSlide
-import cv2
+import pyvips
 
-from PIL import Image
 # from matplotlib.pyplot import imshow, show
 
 from dogsled.normaliser import Normalisation, SlideTiler, NormaliseSlides
 from dogsled.defaults import DEFAULTS
-
-# TODO add refrence defaults to the test folder, import defaults from there
 
 logger = logging.getLogger(__name__)
 
@@ -97,15 +93,15 @@ def test_normalisation(slice_sector_ref, slice_od_ref, slice_he_ref,
     '''full normalisation workflow'''
     # call explicitly test_slides to download the data
     # slide_names = [slide.name for slide in test_slides]
-    # slide =OpenSlide(str(test_slides[slide_names.index('CMU-1-Small-Region.svs')]))
-    slide = OpenSlide(str(Path(DATA_PATH, 'CMU-1-Small-Region.svs')))
+    slide = pyvips.Image.new_from_file(
+        str(Path(DATA_PATH, 'CMU-1-Small-Region.svs')), access='sequential')
     cutout = Normalisation.read_sector(
         slide, location=(550, 550), size_wh=(1110, 1110))
     od = Normalisation.convert_od(cutout, DEFAULTS['normalising_c'])
     he = Normalisation.calculate_hem(od, DEFAULTS['beta'], DEFAULTS['alpha'])
     y = np.reshape(od, (-1, 3)).T
     s_cut = np.empty(shape=[2, 0], dtype=DEFAULTS['dtype'])
-    s_cut = Normalisation.calculate_lstsq(y, he, s_cut)
+    s_cut = Normalisation.nb_lstsq(y, he, s_cut)
     max_s = Normalisation.calculate_sp(s_cut)
     wrapper_s_cut, wrapper_tmp, wrapper_he = Normalisation.region_s(
         cutout, DEFAULTS['normalising_c'],
@@ -115,20 +111,22 @@ def test_normalisation(slice_sector_ref, slice_od_ref, slice_he_ref,
     img = Normalisation.image_restore(c2, DEFAULTS['normalising_c'],
                                       DEFAULTS['he_ref'], (1110, 1110),
                                       output_type='norm')
-    # img = Image.fromarray(img)
-    # imshow(img)
-    # show()
+    res = img.shape[0]*img.shape[1]*3
 
     np.testing.assert_array_equal(slice_sector_ref, cutout)
     np.testing.assert_array_equal(slice_od_ref, od)
     np.testing.assert_array_almost_equal(slice_he_ref, he, decimal=12)
-    np.testing.assert_array_equal(slice_s_cut_ref, s_cut)
-    np.testing.assert_array_equal(slice_max_s_ref, max_s)
-    np.testing.assert_array_equal(slice_wrapper_ref[0], wrapper_s_cut)
-    np.testing.assert_array_equal(slice_wrapper_ref[1], wrapper_tmp)
-    np.testing.assert_array_equal(slice_wrapper_ref[2], wrapper_he)
-    np.testing.assert_array_equal(slice_s_ref, c2)
-    np.testing.assert_array_equal(slice_img_ref, img)
+    np.testing.assert_array_almost_equal(slice_s_cut_ref, s_cut, decimal=6)
+    np.testing.assert_array_almost_equal(slice_max_s_ref, max_s, decimal=6)
+    np.testing.assert_array_almost_equal(
+        slice_wrapper_ref[0], wrapper_s_cut, decimal=5)
+    np.testing.assert_array_almost_equal(
+        slice_wrapper_ref[1], wrapper_tmp, decimal=6)
+    np.testing.assert_array_almost_equal(
+        slice_wrapper_ref[2], wrapper_he, decimal=6)
+    np.testing.assert_array_almost_equal(slice_s_ref, c2, decimal=6)
+    # allow for 1% of mismatched pixels
+    assert (np.count_nonzero(slice_img_ref != img)/res)*100 < 1
 
 
 ############################################################################
@@ -211,16 +209,17 @@ def test_thumbnail_size():
 
 @pytest.fixture(scope='function')
 def small_slide_ref():
-    jpeg_norm = cv2.imread(
+    jpeg_norm = SlideTiler.vips_imread(
         str(Path(DATA_PATH, 'norm_CMU-1-Small-Region.jpeg')))
-    jpeg_he = cv2.imread(str(Path(DATA_PATH, 'he_CMU-1-Small-Region.jpeg')))
-    jpeg_eo = cv2.imread(str(Path(DATA_PATH, 'eo_CMU-1-Small-Region.jpeg')))
+    jpeg_he = SlideTiler.vips_imread(
+        str(Path(DATA_PATH, 'he_CMU-1-Small-Region.jpeg')))
+    jpeg_eo = SlideTiler.vips_imread(
+        str(Path(DATA_PATH, 'eo_CMU-1-Small-Region.jpeg')))
     yield jpeg_norm, jpeg_he, jpeg_eo
 
 
 def test_full_small_svs(small_slide_ref, test_slides):
     '''normalises small slides compares the result to the reference'''
-    DEFAULTS['prefer_vips'] = False  # make sure VIPS is not used
     # enforce use of test_slides at this point
     i = [str(slide.name)
          for slide in test_slides].index('CMU-1-Small-Region.svs')
@@ -231,15 +230,19 @@ def test_full_small_svs(small_slide_ref, test_slides):
     normaliser.start()
     ref_norm, ref_he, ref_eo = small_slide_ref
     # compare norm
-    jpeg_norm = cv2.imread(
+    jpeg_norm = SlideTiler.vips_imread(
         str(Path(NORM_PATH, 'norm_CMU-1-Small-Region.jpeg')))
-    np.testing.assert_array_equal(ref_norm, jpeg_norm)
+    np.testing.assert_allclose(ref_norm, jpeg_norm, rtol=3)
     # compare he
-    jpeg_he = cv2.imread(str(Path(NORM_PATH, 'he_CMU-1-Small-Region.jpeg')))
-    np.testing.assert_array_equal(ref_he, jpeg_he)
+    jpeg_he = SlideTiler.vips_imread(
+        str(Path(NORM_PATH, 'he_CMU-1-Small-Region.jpeg')))
+    np.testing.assert_allclose(ref_he, jpeg_he, rtol=3)
     # compare eo
-    jpeg_eo = cv2.imread(str(Path(NORM_PATH, 'eo_CMU-1-Small-Region.jpeg')))
-    np.testing.assert_array_equal(ref_eo, jpeg_eo)
+    jpeg_eo = SlideTiler.vips_imread(
+        str(Path(NORM_PATH, 'eo_CMU-1-Small-Region.jpeg')))
+    res = jpeg_eo.shape[0]*jpeg_eo.shape[1]*3
+    # allow for 1% of mismatched pixels
+    assert (np.count_nonzero(ref_eo != jpeg_eo)/res)*100 < 1
 
 # 'biggish' slide
 
@@ -247,7 +250,6 @@ def test_full_small_svs(small_slide_ref, test_slides):
 def test_full_big_svs():
     '''make dogsled treat small slide as a big slide'''
     DEFAULTS['ram_megapixel'] = {8000: 1500, 8001: 1500}
-    DEFAULTS['prefer_vips'] = False  # make sure VIPS is not used
     # disable removing temporary files
     DEFAULTS['remove_temporary_files'] = False
     normaliser = NormaliseSlides(svs_path=DATA_PATH,
@@ -274,19 +276,22 @@ def test_full_big_svs():
 
 @pytest.fixture(scope='function')
 def small_slide_ref_vips_tiff():
-    jpeg_norm = cv2.imread(str(Path(DATA_PATH, 'norm_CMU-1-Small-Region.tif')))
-    jpeg_he = cv2.imread(str(Path(DATA_PATH, 'he_CMU-1-Small-Region.tif')))
-    jpeg_eo = cv2.imread(str(Path(DATA_PATH, 'eo_CMU-1-Small-Region.tif')))
-    yield jpeg_norm, jpeg_he, jpeg_eo
+    tif_norm = SlideTiler.vips_imread(
+        str(Path(DATA_PATH, 'norm_CMU-1-Small-Region.tif')))
+    tif_he = SlideTiler.vips_imread(
+        str(Path(DATA_PATH, 'he_CMU-1-Small-Region.tif')))
+    tif_eo = SlideTiler.vips_imread(
+        str(Path(DATA_PATH, 'eo_CMU-1-Small-Region.tif')))
+    yield tif_norm, tif_he, tif_eo
 
 
 def test_vips_stitching(small_slide_ref_vips_tiff):
     '''make dogsled treat small slide as a big slide and use vips stitcher'''
-    DEFAULTS['prefer_vips'] = True
+    DEFAULTS['vips_sticher'] = True
     DEFAULTS['ram_megapixel'] = {8000: 1500, 8001: 1500}
     normaliser = NormaliseSlides(svs_path=DATA_PATH,
                                  slide_names='CMU-1-Small-Region.svs',
-                                 norm_path=Path(DATA_PATH, 'normalised'),
+                                 norm_path=NORM_PATH,
                                  rewrite=True)
     normaliser.start()
     temp_folder = Path(
@@ -305,13 +310,18 @@ def test_vips_stitching(small_slide_ref_vips_tiff):
 
     ref_norm, ref_he, ref_eo = small_slide_ref_vips_tiff
     # compare norm
-    jpeg_norm = cv2.imread(str(Path(NORM_PATH, 'norm_CMU-1-Small-Region.tif')))
-    np.testing.assert_array_equal(ref_norm, jpeg_norm)
+    tif_norm = SlideTiler.vips_imread(
+        str(Path(NORM_PATH, 'norm_CMU-1-Small-Region.tif')))
+    np.testing.assert_allclose(ref_norm, tif_norm, rtol=3)
     # compare he
-    jpeg_he = cv2.imread(str(Path(NORM_PATH, 'he_CMU-1-Small-Region.tif')))
-    np.testing.assert_array_equal(ref_he, jpeg_he)
+    tif_he = SlideTiler.vips_imread(
+        str(Path(NORM_PATH, 'he_CMU-1-Small-Region.tif')))
+    np.testing.assert_allclose(ref_he, tif_he, rtol=3)
     # compare eo
-    jpeg_eo = cv2.imread(str(Path(NORM_PATH, 'eo_CMU-1-Small-Region.tif')))
-    np.testing.assert_array_equal(ref_eo, jpeg_eo)
+    tif_eo = SlideTiler.vips_imread(
+        str(Path(NORM_PATH, 'eo_CMU-1-Small-Region.tif')))
+    res = ref_eo.shape[0]*ref_eo.shape[1]*3
+    # allow for 1% of mismatched pixels
+    assert (np.count_nonzero(ref_eo != tif_eo)/res)*100 < 1
     # restore default values for further tests
     DEFAULTS['ram_megapixel'] = {8000: 12000, 8001: 24500}

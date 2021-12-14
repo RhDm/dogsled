@@ -1,9 +1,8 @@
 '''
 Normaliser
 '''
-
-import gc
-import sys
+import os
+import platform
 import logging
 from time import time
 from collections import OrderedDict
@@ -12,26 +11,37 @@ from typing import Optional, Union, Any, Tuple, List, OrderedDict
 
 import numpy as np
 import numpy.typing as npt
-from PIL import Image
-from openslide import OpenSlide
+import pyvips
+import numba as nb
 
 from dogsled.user_input import FileData
 from dogsled.defaults import DEFAULTS
-from dogsled.errors import CleaningError, UserInputError
+from dogsled.errors import CleaningError, UserInputError, LibVipsError
 from dogsled.paths import PathCreator
 from dogsled.slides import CurrentSlide
 from dogsled.resources import ResourceChecker
-
-Image.MAX_IMAGE_PIXELS = DEFAULTS['PIL_MAX_IMAGE_PIXELS']
+from dogsled.libvips_downloader import GetLibvips
 
 LOGGER = logging.getLogger(__name__)
-# not setting the level in config.py to filter vips etc messages
+# not setting the leven in config.py to filter vips etc messages
 LOGGER.setLevel(logging.DEBUG)
+NB_DTYPE = DEFAULTS['numba_dtype']
 
 try:
     import pyvips
 except ModuleNotFoundError:  # pragma: no cover
-    LOGGER.info('pyvips not imported')
+    if platform.system() == 'Windows':
+        '''
+        if pyvios cound nor be imported & Windows is used
+        => download libvips, register DLLs
+        '''
+        vips_getter = GetLibvips()
+        vips_home = vips_getter.get_path()
+        os.environ['PATH'] = str(vips_home) + ';' + os.environ['PATH']
+
+    else:
+        raise LibVipsError(
+            message=f'was not able to load libvips; please follow https://www.libvips.org/install.html')
 
 
 try:
@@ -47,10 +57,8 @@ if 'line_profiler' not in dir() and 'profile' not in dir():
         '''line_profiler/memory_profiler decorator deactivation'''
         return func
 
-
 # yet to be done
-# TODO profile
-# TODO from pil to opencv
+# TODO further profile
 # TODO add more tests
 
 
@@ -123,33 +131,51 @@ class Normalisation:
     '''
     all heavylifting is defined here
     '''
-
     @staticmethod
-    def read_sector(slide: OpenSlide, location: Tuple[int, int],
+    @profile
+    def read_sector(slide: pyvips.vimage.Image, location: Tuple[int, int],
                     size_wh: Tuple[int, int]) -> npt.NDArray[Any]:
         '''
         reads a slide sector, swaps the channels, returns as numpy array
         '''
         LOGGER.info('reading slide sector')
-        img = np.asarray(slide.read_region(location, 0, size_wh))
+        left, top = location  # inversed for pyvips?
+        width, height = size_wh
+
+        sector = slide.crop(left, top, width, height)
+        img = np.ndarray(buffer=sector.write_to_memory(),
+                         dtype=np.uint8,
+                         shape=[sector.height, sector.width, sector.bands])
         return img[..., 0:3].reshape((-1, 3))
 
     @staticmethod
-    def convert_od(img: npt.NDArray[Any], normalising_c: int) -> npt.NDArray[Any]:
+    @nb.njit
+    def convert_od(img, normalising_c):
         '''normalises the RGB raw values, converts to optical density'''
-        LOGGER.info('od calculation')
-        return -np.log((img.astype(DEFAULTS['dtype']) + 1) / normalising_c)
+        return -np.log((img + 1) / normalising_c)
 
     @staticmethod
+    @nb.njit(cache=True)
+    def np_any_axis1(x: npt.NDArray[Any]) -> npt.NDArray[Any]:
+        """Numba compatible version of np.any(x, axis=1)
+        as in https://stackoverflow.com/questions/61304720/workaround-for-numpy-np-all-axis-argument-compatibility-with-nb"""
+        out = np.zeros(x.shape[0], dtype=np.bool8)
+        for i in range(x.shape[1]):
+            out = np.logical_or(out, x[:, i])
+        return out
+
+    @staticmethod
+    @profile
     def calculate_hem(od: npt.NDArray[Any], beta: float, alpha: float) -> npt.NDArray[Any]:
         '''
         calculates hematoxylin stain
         '''
-        LOGGER.info('thresholdinf OD values')
+        LOGGER.info('thresholding OD values')
         od_clean = od[~np.any(od < beta, axis=1)]
+
         LOGGER.info('calculating eigenvectors & eigenvalues')
         _, eigenvecs = np.linalg.eigh(np.cov(od_clean.T))
-        gc.collect()
+
         # eigenvectors are returned in ascending order, largest two are used
         LOGGER.info('projecting OD values onto the plane')
         projection = od_clean.dot(eigenvecs[:, 1:3].astype(DEFAULTS['dtype']))
@@ -172,27 +198,20 @@ class Normalisation:
         del projection
         del od_clean
         del angs
-        gc.collect()
         return hem
 
     @staticmethod
-    def calculate_lstsq(y: npt.NDArray[Any], he: npt.NDArray[Any],
-                        s_cut: npt.NDArray[Any]) -> npt.NDArray[Any]:
+    @nb.njit
+    def nb_lstsq(y: npt.NDArray[Any], he: npt.NDArray[Any],
+                 s_cut: npt.NDArray[Any]) -> npt.NDArray[Any]:
         '''
         calculates lstsq in batches (saturation of the stains)
         '''
-        t1 = time()
-        LOGGER.info('calculating lstsq in batches (stain saturation)')
         for _, batch in enumerate(np.array_split(y, 80, axis=1)):
             saturation = (
-                np.linalg.lstsq(
-                    he.astype(np.float32), batch.astype(np.float32), rcond=None
-                )[0]
-            ).astype(DEFAULTS['dtype'])
+                np.linalg.lstsq(he, batch)[0]
+            ).astype(NB_DTYPE)
             s_cut = np.concatenate((s_cut, saturation), axis=1)
-            gc.collect()
-        t2 = time()
-        LOGGER.info(f'batches done in {int(t2-t1)} seconds')
         return s_cut
 
     @staticmethod
@@ -203,6 +222,7 @@ class Normalisation:
         )
 
     @staticmethod
+    @profile
     def region_s(img: npt.NDArray[Any], normalising_c: int,
                  alpha: float, beta: float,
                  max_s_ref: npt.NDArray[Any],
@@ -211,26 +231,32 @@ class Normalisation:
         '''
         calculates saturation of region
         '''
-        od = Normalisation.convert_od(img, normalising_c)
-
+        LOGGER.info('od calculation')
+        od = Normalisation.convert_od(
+            img, normalising_c).astype(DEFAULTS['dtype'])
         del img
-        gc.collect()
 
         if he_vals is not None:
             hem = he_vals
         else:
             hem = Normalisation.calculate_hem(od, beta, alpha)
-        y = np.reshape(od, (-1, 3)).T
 
+        y = np.reshape(od, (-1, 3)).T
         del od
-        gc.collect()
 
         s_cut = np.empty(shape=[2, 0], dtype=DEFAULTS['dtype'])
-        s_cut = Normalisation.calculate_lstsq(y, hem, s_cut)
+
+        t1 = time()
+        LOGGER.info('calculating lstsq in batches (stain saturation)')
+        # + converting to float32 for numba..
+        s_cut = Normalisation.nb_lstsq(y.astype(np.float32), hem.astype(
+            np.float32), s_cut.astype(np.float32))
+        t2 = time()
+        LOGGER.info(f'batches done in {int(t2-t1)} seconds')
+
         max_s = Normalisation.calculate_sp(s_cut)
         tmp = np.divide(max_s, max_s_ref).astype(DEFAULTS['dtype'])
 
-        gc.collect()
         return s_cut, tmp, hem
 
     @staticmethod
@@ -244,6 +270,7 @@ class Normalisation:
         return saturation
 
     @staticmethod
+    @profile
     def image_restore(s2: npt.NDArray[Any], normalising_c: int,
                       he_ref: npt.NDArray[Any], wh: tuple,
                       output_type: str = 'norm') -> npt.NDArray[Any]:
@@ -276,15 +303,17 @@ class Normalisation:
         return img
 
     @staticmethod
-    def save_jpeg(path: Path, img: Union[npt.NDArray[Any], Image.Image]) -> None:
+    @profile
+    def save_jpeg(path: Path, img: npt.NDArray[Any]) -> None:
         '''
-        converts to Image object; saves jpeg at path
+        vips jpeg save at path
         '''
-        if not isinstance(img, Image.Image):
-            img = Image.fromarray(img)
         LOGGER.info(f'saving jpeg image: {path.stem}')
-        img.save(path.with_suffix('.jpeg'), 'jpeg',
-                 quality=DEFAULTS['jpeg_quality'])
+        height, width, bands = img.shape
+        linear = img.reshape(width * height * 3)
+        vips_image = pyvips.Image.new_from_memory(
+            linear.data, width, height, bands=bands, format='uchar')
+        vips_image.jpegsave(str(path.with_suffix('.jpeg')), Q=90)
 
 ############# NPZ HANDLING CURRENTLY DISABLED #############
     # @staticmethod
@@ -366,6 +395,7 @@ class SlideTiler:
         return mapping
 
     @staticmethod
+    @profile
     def slicer(width_height_px: Tuple[int, int],
                max_side_px: int) -> Tuple[Tuple[int, int], OrderedDict[int,
                                                                        Tuple[Tuple[int, int], Tuple[int, int]]]]:
@@ -402,54 +432,96 @@ class SlideTiler:
     #     Normalisation.save_jpeg(Path(current_slide.norm_path, current_slide.slide_path.stem),
     #                             image_stitched)
 
+
     @staticmethod
     def jpeg_stitcher(*args) -> None:
         '''
         stitches normalised slide tiles (located in the temporary folder) together
         '''
         LOGGER.info('stitching image together')
-        # if libvips is installed, and prefered by the user
-        if 'pyvips' in sys.modules and DEFAULTS['prefer_vips']:
+        # if libvips stitching is prefered by the user
+        if DEFAULTS['vips_sticher']:
             SlideTiler.vips_stitcher(*args)
         else:
-            SlideTiler.pil_stitcher(*args)
+            SlideTiler.stitcher(*args)
 
     @staticmethod
-    def pil_stitcher(stain_type: str, current_slide: CurrentSlide) -> None:
+    def vips_imread(path: str) -> npt.NDArray[Any]:
+        '''rapper for vips imare reading'''
+        img = pyvips.Image.new_from_file(path, access='sequential')
+        np_img = np.ndarray(buffer=img.write_to_memory(),
+                            dtype=np.uint8,
+                            shape=[img.height, img.width, img.bands])
+        return np_img[:, :, :3]
+
+    @staticmethod
+    @profile
+    def stitcher(stain_type: str, current_slide: CurrentSlide) -> None:
         '''
-        uses Pil for stitching if libvips is not installed
+        uses vips to read tiles, stitches them together as -numpy arrays-
         works fine for 20x zoomed slides
         '''
-        LOGGER.info('stitching using PIL')
+        LOGGER.info('stitching using numpy arrays')
         LOGGER.info(f'stitching slide: {current_slide.slide_path.name}')
-        new_slide = Image.new(
-            mode='RGB', size=current_slide.wh, color=(0, 0, 0))
-        for i, (location, _) in current_slide.tile_map.items():
-            tile = Image.open(Path(current_slide.temp_subpath,
-                              f'{i}_{stain_type}.jpeg'), 'r')
-            new_slide.paste(tile, location)
+        # width, height = current_slide.wh
+        m_rows, n_cols = current_slide.mn
+        slice_index = 0
+        stacked_rows = ()
+        for _ in range(m_rows):
+            row = ()
+            for _ in range(n_cols):
+                path = str(Path(current_slide.temp_subpath,
+                           f'{slice_index}_{stain_type}.jpeg'))
+                tile = SlideTiler.vips_imread(path)
+                row += (tile,)
+                slice_index += 1
+            row_stitched = np.concatenate(row, axis=1)
+            stacked_rows += (row_stitched,)
+        image_stitched = np.concatenate(stacked_rows, axis=0)
         LOGGER.info('stitching finished')
-        Normalisation.save_jpeg(Path(current_slide.norm_path,
-                                     f'{stain_type}_{current_slide.slide_path.stem}'),
-                                new_slide)
+        path = Path(current_slide.norm_path,
+                    f'{stain_type}_{current_slide.slide_path.stem}')
+        Normalisation.save_jpeg(path, image_stitched)
+
         if DEFAULTS['thumbnail']:
-            SlideTiler.pil_thumbnail(current_slide, new_slide, stain_type)
+            SlideTiler.thumbnail_from_np(
+                current_slide, image_stitched, stain_type)
 
     @staticmethod
-    def pil_thumbnail(current_slide: CurrentSlide,
-                      slide: Union[npt.NDArray[Any], Image.Image],
-                      stain_type: str) -> None:
-        '''creates thumbnail if pil is used'''
+    def thumbnail_from_np(current_slide: CurrentSlide,
+                          slide: npt.NDArray[Any],
+                          stain_type: str) -> None:
+        '''creates thumbnail from a numpy array image'''
         LOGGER.info('creating normalised thumbnail')
-        if not isinstance(slide, Image.Image):
-            slide = Image.fromarray(slide)
-        twidth_height = SlideTiler.thumbnail_size(current_slide.wh)
-        slide.thumbnail(twidth_height)
-        slide.save(
-            Path(current_slide.norm_path,
-                 f'thumbnail_{stain_type}_{current_slide.slide_path.stem}.jpeg'))
+        twidth, theight = SlideTiler.thumbnail_size(current_slide.wh)
+        height, width, bands = slide.shape
+        slide = slide.reshape(width * height * 3)
+        vips_image = pyvips.Image.new_from_memory(
+            slide.data, width, height, bands=bands, format='uchar')
+        thumbnail = vips_image.thumbnail_image(twidth, height=theight)
+        path = str(Path(current_slide.norm_path,
+                   f'thumbnail_{stain_type}_{current_slide.slide_path.stem}.jpeg'))
+        thumbnail.jpegsave(str(path), Q=90)
 
-    # SlideTiler.jpeg_stitcher(stain_type, self.current_slide)
+    @staticmethod
+    def thumbnail_from_image(slide: CurrentSlide, stain_type: Optional[str] = None) -> None:
+        '''creates thumbnail from the sourde slide or '''
+        twidth, theight = SlideTiler.thumbnail_size(slide.wh)
+        if stain_type:
+            LOGGER.info(f'creating {stain_type} thumbnail')
+            slide_path = Path(
+                slide.norm_path, f'{stain_type}_{slide.slide_path.stem}.jpeg')
+            thumbnail = pyvips.Image.thumbnail(
+                str(slide_path), twidth, height=theight)
+            path = Path(slide.norm_path,
+                        f'thumbnail_{stain_type}_{slide.slide_path.stem}.jpeg')
+        else:
+            LOGGER.info('creating slide thumbnail')
+            thumbnail = slide.os_slide.thumbnail_image(twidth, height=theight)
+            path = Path(slide.norm_path,
+                        f'thumbnail_{slide.slide_path.stem}.jpeg')
+        thumbnail.jpegsave(str(path), Q=DEFAULTS['jpeg_quality'])
+
     @staticmethod
     def vips_stitcher(stain_type: str, current_slide: CurrentSlide) -> None:
         '''
@@ -465,9 +537,9 @@ class SlideTiler:
         normalised_slide = pyvips.Image.arrayjoin(tiles,
                                                   across=current_slide.mn[1])
         # TODO check for size limit 65535
-        mpp_x = current_slide.os_slide.properties['openslide.mpp-x']
+        mpp_x = current_slide.os_slide.get('openslide.mpp-x')
         # mpp_y = current_slide.os_slide.properties['openslide.mpp-y'] # used for Aperio metadata
-        magnification = current_slide.os_slide.properties['openslide.objective-power']
+        magnification = current_slide.os_slide.get('openslide.objective-power')
         # currently spoofs Aperio metadata ( Magnification in OME Schema is not recognised by QuPath..)
         normalised_slide.set_type(pyvips.GValue.gstr_type,
                                   'image-description',
@@ -483,33 +555,7 @@ class SlideTiler:
                                   Q=DEFAULTS['jpeg_quality'])
 
         if DEFAULTS['thumbnail']:
-            SlideTiler.vips_thumbnail(stain_type, current_slide)
-
-    @staticmethod
-    def vips_thumbnail(stain_type: str, current_slide: CurrentSlide) -> None:
-        '''creates thumbnail if vips is used'''
-        LOGGER.info('creating normalised thumbnail')
-        twidth, theight = SlideTiler.thumbnail_size(current_slide.wh)
-        slide_path = Path(current_slide.norm_path,
-                          f'{stain_type}_{current_slide.slide_path.stem}.tif')
-        thumbnail = pyvips.Image.thumbnail(
-            str(slide_path), twidth, height=theight)
-        thumbnail.jpegsave(str(Path(current_slide.norm_path,
-                                    f'thumbnail_{stain_type}_{current_slide.slide_path.stem}.jpeg')))
-        # thumbnail = normalised_slide.thumbnail_image(twidth,
-        #                                              height=theight,
-        #                                              access='seqiential')
-        # LOGGER.info('thumbnail created')
-        # thumbnail.jpegsave(str(result_path.with_suffix('.jpeg')))
-
-    @staticmethod
-    def slide_thumbnail(slide: CurrentSlide) -> None:
-        '''creates thumbnail from the original slide'''
-        LOGGER.info('creating thumbnail')
-        twidth, theight = SlideTiler.thumbnail_size(slide.wh)
-        thumbnail = slide.os_slide.get_thumbnail((twidth, theight))
-        thumbnail.save(Path(slide.norm_path,
-                            f'thumbnail_{slide.slide_path.stem}.jpeg'))
+            SlideTiler.thumbnail_from_image(current_slide, stain_type)
 
     @staticmethod
     def thumbnail_size(slide_width_height: Tuple[int, int]) -> Tuple[int, int]:
@@ -620,8 +666,9 @@ class NormaliseSlides:
         '''
         re-usable slide pre-processing
         '''
-        os_slide = OpenSlide(str(self.current_slide.slide_path))
-        slide_wh = os_slide.dimensions
+        os_slide = pyvips.Image.new_from_file(
+            str(self.current_slide.slide_path), access='sequential')
+        slide_wh = (os_slide.width, os_slide.height)
         self.current_slide.wh = slide_wh
         self.current_slide.os_slide = os_slide
         LOGGER.info_regular(f'using maximum tile size of {max_side_px} pixel')
@@ -664,6 +711,7 @@ class NormaliseSlides:
             raise CleaningError(
                 message=f'removing temporary files was not possible')
 
+    @profile
     def process_slide(self, max_side_px: int) -> None:
         '''
         wrapper for full slide processing
@@ -675,7 +723,7 @@ class NormaliseSlides:
                               f'thumbnail_{self.current_slide.slide_path.stem}.jpeg')
         # creates thumbnail only if it is defined in DEFAULTS and if it does not exist already
         if DEFAULTS['thumbnail'] and not thumbnail_path.exists():
-            SlideTiler.slide_thumbnail(self.current_slide)
+            SlideTiler.thumbnail_from_image(self.current_slide)
         # for the first run of the normaliser on the tile in the middle:
         first_run = True
         # flag indicates whether there is only one tile
@@ -700,6 +748,7 @@ class NormaliseSlides:
                 if (DEFAULTS['remove_temporary_files'] is True):  # check explicitly for True
                     self.cleaner(stain_type, self.current_slide)
 
+    @profile
     def slice_normalisation(self, slice_index: int,
                             location_size: Tuple[Tuple[int, int], Tuple[int, int]],
                             single_run: bool, first_run: bool):
@@ -727,7 +776,7 @@ class NormaliseSlides:
         LOGGER.info('s_cut, tmp, calculated')
         c2 = Normalisation.s_final(s_cut, self.tmp)
         del s_cut
-        gc.collect()
+        # gc.collect()
         for stain_type in DEFAULTS['output_type']:
             restored_img = Normalisation.image_restore(c2,
                                                        DEFAULTS['normalising_c'],
@@ -747,9 +796,8 @@ class NormaliseSlides:
                 Normalisation.save_jpeg(Path(self.current_slide.norm_path,
                                              f'{stain_type}_{self.current_slide.slide_path.stem}'),
                                         restored_img)
-                # create additional tile TODO consider removing?
+                # create additional tile TODO consirer removing?
                 if DEFAULTS['thumbnail']:
-                    SlideTiler.pil_thumbnail(
+                    SlideTiler.thumbnail_from_np(
                         self.current_slide, restored_img, stain_type)
             del restored_img
-            gc.collect()

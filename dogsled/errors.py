@@ -27,3 +27,13 @@ class CleaningError(Exception):
                  message: str) -> None:
         self.message = message
         super().__init__(message)
+
+
+class LibVipsError(ModuleNotFoundError):
+    '''when libvips has to be downloaded for Linux/MacOS
+    ..homebrew etc'''
+
+    def __init__(self,
+                 message: str) -> None:
+        self.message = message
+        super().__init__(message)

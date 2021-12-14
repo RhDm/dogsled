@@ -12,7 +12,7 @@ from typing import Tuple
 from dataclasses import dataclass
 from collections import OrderedDict
 
-from openslide import OpenSlide
+import pyvips
 from paquo.projects import QuPathProject
 
 from dogsled.paths import PathChecker
@@ -35,8 +35,8 @@ class CurrentSlide:
     temp_path: Path = None
     # for holding tiles of the current tile
     temp_subpath: Path = None
-    # OpenSlide instance
-    os_slide: OpenSlide = None
+    # pyvips.vimage.Image instance
+    os_slide: pyvips.vimage.Image = None
     # original slide width x height
     wh: Tuple[int, int] = None
     # tile m x n matrix
