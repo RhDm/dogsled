@@ -1,7 +1,7 @@
 Quick tour
 =====================================
 
-The simplest dogsled installation can be done via `Conda <https://docs.conda.io/en/latest//>`__ using :code:`environment.yml` file for Linux and macOS and :code:`win_environment.yml` for Windows (the next version of dogsled will have one YML environment file for all systems)
+The simplest dogsled installation can be done via `Conda <https://docs.conda.io/en/latest//>`__ using :code:`environment.yml` file for Linux and macOS and :code:`win_environment.yml` for Windows
 
 .. hint::
 
