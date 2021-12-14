@@ -30,7 +30,7 @@ class CleaningError(Exception):
 
 
 class LibVipsError(ModuleNotFoundError):
-    '''when libvips has to be downloaded for Linux/MacOS
+    '''when libvips has to be downloaded for Linux/macOS
     ..homebrew etc'''
 
     def __init__(self,

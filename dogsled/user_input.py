@@ -61,7 +61,7 @@ class SystemPaths:
     '''
     norm_slide_path: Path
     temp_path: Optional[Path] = None
-    svs_path: Optional[Path] = None
+    source_path: Optional[Path] = None
     qpproj_path: Optional[Path] = None
 
     def __str__(self) -> str:
@@ -69,7 +69,7 @@ class SystemPaths:
             return f'QuPath project at at: {self.qpproj_path}\n\
                 path for normalised slides: {self.norm_slide_path},\n\
                 temporary path: {self.temp_path}'
-        return f'slides at {self.svs_path}\n\
+        return f'slides at {self.source_path}\n\
                 path for normalised slides: {self.norm_slide_path},\n\
                 temporary path: {self.temp_path}'
 
@@ -174,13 +174,13 @@ class FileData:
                  slides_indexes: Optional[List[int]] = None,
                  slide_names: Optional[List[str]] = None,
                  qpproj_path: Union[str, Path, None] = None,
-                 svs_path: Union[str, Path, None] = None,
+                 source_path: Union[str, Path, None] = None,
                  temp_path: Union[str, Path, None] = None,
                  rewrite: Optional[bool] = None
                  ) -> None:
 
         self.path_info = self.system_paths(norm_path,
-                                           svs_path,
+                                           source_path,
                                            qpproj_path,
                                            temp_path,
                                            rewrite_flag=rewrite)
@@ -195,18 +195,18 @@ class FileData:
 
     def system_paths(self,
                      norm_slide_path: Union[str, Path],
-                     svs_path: Optional[Union[str, Path]] = None,
+                     source_path: Optional[Union[str, Path]] = None,
                      qpproj_path: Optional[Union[str, Path]] = None,
                      temp_path: Optional[Union[str, Path]] = None,
                      rewrite_flag=False) -> SystemPaths:
         '''
         returns instance of UserSlideInput which holds
         controlled system paths
-        if both, svs_path and qpproj_path, are provided, then qpproj_path has priority
+        if both, source_path and qpproj_path, are provided, then qpproj_path has priority
         created paths (temporary path)
         temporary path is created either at the given path or as temp folder in norm_slide_path)
         '''
-        if not svs_path and not qpproj_path:
+        if not source_path and not qpproj_path:
             LOGGER.error(
                 f'either path with SVS slides or QuPath project path must be provided')
             raise UserInputError(
@@ -219,7 +219,7 @@ class FileData:
         if qpproj_path:
             path_holder.qpproj_path = path_checker.str_to_path(qpproj_path)
         else:
-            path_holder.svs_path = path_checker.str_to_path(svs_path)
+            path_holder.source_path = path_checker.str_to_path(source_path)
 
         # TODO maybe should switch to tempfile
         # tempfile.TemporaryDirectory(suffix=None, prefix=slide_stem, dir=temp_path)
@@ -260,7 +260,7 @@ class FileData:
         else:
             paquo_project = None
             all_slide_names = [slide.name for slide in
-                               path_info.svs_path.iterdir()
+                               path_info.source_path.iterdir()
                                if slide.suffix == '.svs' and not slide.name.startswith('.')]
 
         return all_slide_names, paquo_project
@@ -292,11 +292,11 @@ class FileData:
                 slide_paths = [self.qupath_image_path(i, paquo_project)
                                for i in slide_info.to_process_i]
             else:
-                slide_paths = [Path(path_info.svs_path, all_slide_names[i])
+                slide_paths = [Path(path_info.source_path, all_slide_names[i])
                                for i in slide_info.to_process_i]
         else:  # normalise all of no names or idexes are defined
-            if path_info.svs_path:  # if the path to the svs files is provided
-                slide_paths = [Path(path_info.svs_path, slide)
+            if path_info.source_path:  # if the path to the svs files is provided
+                slide_paths = [Path(path_info.source_path, slide)
                                for slide in all_slide_names]
             else:
                 # if path to the qpproj is provided

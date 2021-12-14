@@ -4,7 +4,7 @@
 About dogsled
 =====================================
 
-dogsled is an `open-source <https://en.wikipedia.org/wiki/Richard_Stallman#Open_source_and_Free_software>`_ Python package that does only `one <https://en.wikipedia.org/wiki/Unix_philosophy>`_ thing: Macenko :footcite:p:`Macenko2009method` stain normalisation of medical slides readable by `OpenSlide <https://openslide.org>`_. It generates either JPEG or TIFF normalised image, and it is designed to be:
+dogsled is an `open-source <https://en.wikipedia.org/wiki/Richard_Stallman#Open_source_and_Free_software>`_ Python package that does only `one <https://en.wikipedia.org/wiki/Unix_philosophy>`_ thing: Macenko :footcite:p:`Macenko2009method` stain normalisation of medical slides. It works with `OpenSlide <https://openslide.org>`_ slide formats, generates either JPEG or TIFF normalised image, and it is designed to be:
 
 * **Simple** -- minimum input is required from the user
 * **Flexible** -- dogsled supports different ways of specifying which slides have to be normalised

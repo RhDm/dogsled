@@ -34,8 +34,8 @@ DEFAULTS = {
                           '.vms', '.vmu', '.ndpi', '.mrxs',
                           '.svslide', '.bif'],
     'first_tile': 'middle',
-    'libvips_url': 'https://github.com/libvips/build-win64-mxe/releases/download/v8.12.1/vips-dev-w64-web-8.12.1-static.zip',
-    'libvips_md5': 'b5c4e55ad7203f45568e2ed0c6ad93d8'
+    'libvips_url': 'https://github.com/libvips/build-win64-mxe/releases/download/v8.12.1/vips-dev-w64-all-8.12.1.zip',
+    'libvips_md5': '372821f34518e57dc4d311f28269e292'
 }
 
 # pseudo-maximum scaled?

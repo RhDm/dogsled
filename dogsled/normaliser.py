@@ -11,7 +11,6 @@ from typing import Optional, Union, Any, Tuple, List, OrderedDict
 
 import numpy as np
 import numpy.typing as npt
-import pyvips
 import numba as nb
 
 from dogsled.user_input import FileData
@@ -27,19 +26,22 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
 NB_DTYPE = DEFAULTS['numba_dtype']
 
-try:
-    import pyvips
-except ModuleNotFoundError:  # pragma: no cover
-    if platform.system() == 'Windows':
-        '''
-        if pyvios cound nor be imported & Windows is used
-        => download libvips, register DLLs
-        '''
-        vips_getter = GetLibvips()
-        vips_home = vips_getter.get_path()
-        os.environ['PATH'] = str(vips_home) + ';' + os.environ['PATH']
 
-    else:
+#### pyvips import block ####
+# ugly, but works for windows
+if platform.system() == 'Windows':
+    '''
+    if pyvios cound nor be imported & Windows is used
+    => download libvips, register DLLs
+    '''
+    vips_getter = GetLibvips()
+    vips_home = vips_getter.get_path()
+    os.environ['PATH'] = str(vips_home) + ';' + os.environ['PATH']
+    import pyvips
+else:
+    try:
+        import pyvips
+    except ModuleNotFoundError:
         raise LibVipsError(
             message=f'was not able to load libvips; please follow https://www.libvips.org/install.html')
 
@@ -553,6 +555,7 @@ class SlideTiler:
                                   bigtiff=True,
                                   tile=True,
                                   Q=DEFAULTS['jpeg_quality'])
+        LOGGER.info('stitching finished & TIF saved')
 
         if DEFAULTS['thumbnail']:
             SlideTiler.thumbnail_from_image(current_slide, stain_type)
@@ -592,13 +595,13 @@ class NormaliseSlides:
             names of the slides to be normalised; if several slides have to be
             normalised, provide the names in a list
         qpproj_path:
-            [required or svs_path] specifies the path to the .qpproj file in case the slides of a QuPath
+            [required or source_path] specifies the path to the .qpproj file in case the slides of a QuPath
             project have to be normalised
         slides_indexes:
             when `qpproj_path` is specified, the slides to be normalised can also be
             specified using their index. In this case, the index corresponds to the
             index in the QuPath project (check in QuPath GUI of by using paquo)
-        svs_path:
+        source_path:
             [required or qpproj_path] the slides can be also specified by providing the path to the folder they
             are located in. In this case, it is possible to specify their subset using
             `slide_names`

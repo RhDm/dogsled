@@ -1,3 +1,5 @@
+import os
+import platform
 import pickle
 import logging
 from pathlib import Path
@@ -5,9 +7,28 @@ from distutils import dir_util
 
 import numpy as np
 import pytest
-import pyvips
 
-# from matplotlib.pyplot import imshow, show
+from dogsled.libvips_downloader import GetLibvips
+from dogsled.errors import LibVipsError
+
+#### pyvips import block ####
+# ugly, but works for windows
+if platform.system() == 'Windows':
+    '''
+    if pyvios cound nor be imported & Windows is used
+    => download libvips, register DLLs
+    '''
+    vips_getter = GetLibvips()
+    vips_home = vips_getter.get_path()
+    os.environ['PATH'] = str(vips_home) + ';' + os.environ['PATH']
+    import pyvips
+else:
+    try:
+        import pyvips
+    except ModuleNotFoundError:
+        raise LibVipsError(
+            message=f'was not able to load libvips; please follow https://www.libvips.org/install.html')
+
 
 from dogsled.normaliser import Normalisation, SlideTiler, NormaliseSlides
 from dogsled.defaults import DEFAULTS
@@ -114,7 +135,7 @@ def test_normalisation(slice_sector_ref, slice_od_ref, slice_he_ref,
     res = img.shape[0]*img.shape[1]*3
 
     np.testing.assert_array_equal(slice_sector_ref, cutout)
-    np.testing.assert_array_equal(slice_od_ref, od)
+    np.testing.assert_array_almost_equal(slice_od_ref, od, decimal=16)
     np.testing.assert_array_almost_equal(slice_he_ref, he, decimal=12)
     np.testing.assert_array_almost_equal(slice_s_cut_ref, s_cut, decimal=6)
     np.testing.assert_array_almost_equal(slice_max_s_ref, max_s, decimal=6)
@@ -124,7 +145,7 @@ def test_normalisation(slice_sector_ref, slice_od_ref, slice_he_ref,
         slice_wrapper_ref[1], wrapper_tmp, decimal=6)
     np.testing.assert_array_almost_equal(
         slice_wrapper_ref[2], wrapper_he, decimal=6)
-    np.testing.assert_array_almost_equal(slice_s_ref, c2, decimal=6)
+    np.testing.assert_allclose(slice_s_ref, c2, atol=2e-6)
     # allow for 1% of mismatched pixels
     assert (np.count_nonzero(slice_img_ref != img)/res)*100 < 1
 
@@ -223,7 +244,7 @@ def test_full_small_svs(small_slide_ref, test_slides):
     # enforce use of test_slides at this point
     i = [str(slide.name)
          for slide in test_slides].index('CMU-1-Small-Region.svs')
-    normaliser = NormaliseSlides(svs_path=DATA_PATH,
+    normaliser = NormaliseSlides(source_path=DATA_PATH,
                                  slide_names=str(test_slides[i].name),
                                  norm_path=Path(DATA_PATH, 'normalised'),
                                  rewrite=True)
@@ -252,7 +273,7 @@ def test_full_big_svs():
     DEFAULTS['ram_megapixel'] = {8000: 1500, 8001: 1500}
     # disable removing temporary files
     DEFAULTS['remove_temporary_files'] = False
-    normaliser = NormaliseSlides(svs_path=DATA_PATH,
+    normaliser = NormaliseSlides(source_path=DATA_PATH,
                                  slide_names='CMU-1-Small-Region.svs',
                                  norm_path=Path(DATA_PATH, 'normalised'),
                                  rewrite=True)
@@ -289,7 +310,7 @@ def test_vips_stitching(small_slide_ref_vips_tiff):
     '''make dogsled treat small slide as a big slide and use vips stitcher'''
     DEFAULTS['vips_sticher'] = True
     DEFAULTS['ram_megapixel'] = {8000: 1500, 8001: 1500}
-    normaliser = NormaliseSlides(svs_path=DATA_PATH,
+    normaliser = NormaliseSlides(source_path=DATA_PATH,
                                  slide_names='CMU-1-Small-Region.svs',
                                  norm_path=NORM_PATH,
                                  rewrite=True)

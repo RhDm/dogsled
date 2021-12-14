@@ -46,7 +46,7 @@ class GetLibvips:
             path.mkdir(exist_ok=False)
         except FileExistsError:
             LOGGER.warning(
-                'libvips folder already exists, but will try to download again')
+                'libvips already downloaded')
         return path
 
     def download_dlls(self) -> None:
@@ -56,6 +56,7 @@ class GetLibvips:
 
         with urllib.request.urlopen(url) as response, open(self.libvips_zip, 'wb') as out_file:
             shutil.copyfileobj(response, out_file)
+        LOGGER.info(GetLibvips.md5_gen(self.libvips_zip))
 
         if GetLibvips.md5_gen(self.libvips_zip) != DEFAULTS['libvips_md5']:
             LOGGER.error(

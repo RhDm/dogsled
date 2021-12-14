@@ -2,7 +2,7 @@ name: tests
 on: [push]
 jobs:
   tests-1:
-    name: Linux/MacOS tests
+    name: Linux/macOS tests
     runs-on: ${{ matrix.os }}
     strategy:
         matrix:

@@ -13,7 +13,7 @@ The :class:`NormaliseSlides` class
 
     dogsled.normaliser.NormaliseSlides
 
-:class:`NormaliseSlides` is the main interface for slide normalisation. It is required to specify which folder should contain the normalised slides by passing the :py:attr:`norm_path` argument. The slides themselves can be specified either by passing the :py:attr:`qpproj_path` or :py:attr:`svs_path`. If both are specified, then :py:attr:`qpproj_path` is used and the :py:attr:`svs_path` is ignored. See :meth:`__init__` for further details:
+:class:`NormaliseSlides` is the main interface for slide normalisation. It is required to specify which folder should contain the normalised slides by passing the :py:attr:`norm_path` argument. The slides themselves can be specified either by passing the :py:attr:`qpproj_path` or :py:attr:`source_path`. If both are specified, then :py:attr:`qpproj_path` is used and the :py:attr:`source_path` is ignored. See :meth:`__init__` for further details:
 
 
 .. autoclass:: dogsled.normaliser.NormaliseSlides
@@ -26,7 +26,7 @@ Example usage:
     from dogsled.normaliser import NormaliseSlides
 
     normaliser = NormaliseSlides(norm_path = '/Users/uname/slides/normalised',
-                                 svs_path = '/Users/uname/slides/',
+                                 source_path = '/Users/uname/slides/',
                                  qpproj_path = '/Users/uname/QuPath_projects/project.qpproj',
                                  slides_indexes = [0,1,8],
                                  slide_names = ['SAS_21883_001.svs', 'VUHSK_1912.svs'])
@@ -66,12 +66,12 @@ When big slides are handled, many normalised tiles can be produced. These tiles 
     user@arch:~$ cd /Users/uname/slides/normalised
     user@arch:normalised$ tail -3 dogsled.log
     01/12/2021 09:16:50 PM normaliser INFO: [ Slide 1/1 SAS_21883_001.svs tile 4/4 stitching image together ]
-    01/12/2021 09:16:50 PM normaliser INFO: [ Slide 1/1 SAS_21883_001.svs tile 4/4 stitching using PIL ]
+    01/12/2021 09:16:50 PM normaliser INFO: [ Slide 1/1 SAS_21883_001.svs tile 4/4 stitching using vips ]
     01/12/2021 09:16:50 PM normaliser INFO: [ Slide 1/1 SAS_21883_001.svs tile 4/4 stitching slide: SAS_21883_001.svs ]
     01/12/2021 09:16:50 PM normaliser INFO: [ Slide 1/1 SAS_21883_001.svs tile 4/4 stitching finished ]
     01/12/2021 09:16:50 PM normaliser INFO: [ Slide 1/1 SAS_21883_001.svs tile 4/4 saving jpeg image: norm_SAS_21883_001 ]
 
-If the last logged event states the name of the stitched slide or the status of saving image (last three lanes in the above example), the stitching might have caused a crash, and re-stitching can be applied (also, you might want to check whether the temporary folder of the slide contains a correct number of tiles, 4 in case of the example above). For this purpose, :class:`NormaliseSlides` has to be reinitialised prior repeating the stitching using **only** the slide which caused the crash. Also, it is recommended to use VIPS instead of the default PIL for slide stitching and saving, as it minimises the risk of a crash:
+If the last logged event states the name of the stitched slide or the status of saving image (last three lanes in the above example), the stitching might have caused a crash, and re-stitching can be applied (also, you might want to check whether the temporary folder of the slide contains the correct number of tiles, 4 in case of the example above). For this purpose, :class:`NormaliseSlides` has to be reinitialised prior repeating the stitching using **only** the slide which caused the crash. Also, it is recommended to use VIPS stitching instead of the default NumPy array stacking:
 
 .. code-block:: python
 
@@ -79,15 +79,15 @@ If the last logged event states the name of the stitched slide or the status of 
     from dogsled.defaults import DEFAULTS
 
     normaliser = NormaliseSlides(norm_path = '/Users/uname/slides/normalised',
-                                 svs_path = '/Users/uname/slides/',
+                                 source_path = '/Users/uname/slides/',
                                  qpproj_path = '/Users/uname/QuPath_projects/project.qpproj',
                                  slide_names = ['SAS_21883_001.svs'])
-    DEFAULTS['prefer_vips']= True
+    DEFAULTS['vips_sticher']= True
     normaliser.repeat_stitching()
 
 .. note::
 
-    dogseld is designed to avoid crashes. When the :class:`NormaliseSlides` is initialised, it analyses the RAM available and tailors the size of the tiles accordingly. The thresholds are defined in the :py:attr:`DEFAULTS` dictionary (see further). Apart from that, dogsled gives a (very) aproximate estimation of the space required for normalisation of the selected slides and the space available (the normalisation will be started regardless of the space estimation results). Both, RAM and space estimation information are shown during the :class:`NormaliseSlides` initialisation
+    dogseld is designed to avoid crashes. When the :class:`NormaliseSlides` is initialised, it analyses the RAM available and tailors the size of the tiles accordingly. The thresholds are defined in the :py:attr:`DEFAULTS` dictionary (see further). Apart from that, dogsled gives a (very) aproximate estimation of the space required for normalisation of the selected slides and the space available (the normalisation will be started regardless of the space estimation results). Both, RAM and space estimation information are shown during the :class:`NormaliseSlides` initialisation. Please note that the actual space required for slide processing might be higher as your system might save intermediate data on the disc. It is recommended to have at least 10GB of free memory.
 
 
 
@@ -106,17 +106,17 @@ This dictionary holds constants used for normalisation and some other normalisat
     import numpy as np
 
     DEFAULTS = {'show_results': False,
-                'ram_megapixel': {8000: 12000, 8001: 24500},
+                'ram_megapixel': {12000: 12000, 12001: 24500},
                 'output_type': ['norm'],
-                'dtype': np.float16,
+                'dtype': np.float32,
+                'numba_dtype': numba.float32,
                 'temporary_folder_name': 'dogsled_temp',
-                'remove_temporary_files': False,
+                'remove_temporary_files': True,
                 'jpeg_quality': 95,
                 'vips_tiff_compression': 'lzw',
-                'PIL_MAX_IMAGE_PIXELS': 2000000000,
                 'thumbnail': True,
                 'thumbnail_max_side': 6000,
-                'prefer_vips': False,
+                'vips_sticher': False,
                 'OpenSlide_formats': ['.svs', '.tif', '.tiff', '.scn', '.vms', '.vmu', '.ndpi', '.mrxs', '.svslide', '.bif'],
                 'first_tile': 'middle',
                 # normalisation constants:
@@ -125,8 +125,9 @@ This dictionary holds constants used for normalisation and some other normalisat
                 'beta': 0.0015,
                 'he_ref': array([[0.6895, 0.1759],
                                  [0.6973, 0.8286],
-                                 [0.674 , 0.5312]], dtype=float16),
-                'max_s_ref': array([0.498, 0.927], dtype=float16)}
+                                 [0.674 , 0.5312]]),
+                'max_s_ref': array([0.498, 0.927])}
+
 
 All of the parameters may be re-defined by the user prior :class:`NormaliseSlides` initialisation:
 
@@ -136,9 +137,9 @@ All of the parameters may be re-defined by the user prior :class:`NormaliseSlide
     from dogsled.defaults import DEFAULTS
 
     DEFAULTS['output_type'] = ['norm', 'he', 'eo']
-    DEFAULTS['prefer_vips'] = True
+    DEFAULTS['vips_sticher'] = True
 
-    normaliser = NormaliseSlides(svs_path = '/Users/uname/slides/',
+    normaliser = NormaliseSlides(source_path = '/Users/uname/slides/',
                                  qpproj_path = '/Users/uname/QuPath_projects/project.qpproj',
                                  slides_indexes = [0,1,8],
                                  slide_names = ['SAS_21883_001.svs', 'VUHSK_1912.svs'])
@@ -150,11 +151,11 @@ All of the parameters may be re-defined by the user prior :class:`NormaliseSlide
 
     :attr:`ram_megapixel` is a mapping of available RAM to the tile size that will
     be used during normalisation. During initialisation, dogsled checks available RAM using
-    :py:attr:`psutil`. If the value is less than or equal 8000MB, then the maximum width and height
+    :py:attr:`psutil`. If the value is less than or equal 12000MB, then the maximum width and height
     of the tile used are set to 12000px; if the value is bigger- 24500
 
     :type: dictionary
-    :default: :py:attr:`{8000: 12000, 8001: 24500}`
+    :default: :py:attr:`{12000: 12000, 12001: 24500}`
 
 .. confval:: output_type
 
@@ -170,8 +171,22 @@ All of the parameters may be re-defined by the user prior :class:`NormaliseSlide
 
     NumPy data type used when performing the normalisation operations
 
-    :type: list[string]
-    :default: :py:attr:`np.float16`
+    :type: type
+    :default: :py:attr:`np.float32`
+
+        .. attention::
+
+            It is possible to set this attribute to a lower value- `np.float16`, which will increase
+            the speed of calculations and decrease the intermediate space required. This, however, may
+            result in artefacts being present in the end result due to the lower precision (dark pixels
+            scattered over regions with high contrast)
+
+.. confval:: numba_dtype
+
+    Numba data type used for Numba-optimised calculations
+
+    :type: type
+    :default: :py:attr:`numba.float32`
 
 .. confval:: temporary_folder_name
 
@@ -198,22 +213,21 @@ All of the parameters may be re-defined by the user prior :class:`NormaliseSlide
 
 .. confval:: jpeg_quality
 
-    `JPEG quality <https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#jpeg/>`_ used when creating the tiles
+    JPEG quality used when creating the tiles
 
     :type: integer
     :default: :py:attr:`95`
 
-.. confval:: prefer_vips
+.. confval:: vips_sticher
 
     If large slides are handled, their tiles might not fit into the memory at once when stitched
     together (e.g. slides with 40x magnification and size over 100,000pixels per side). In these cases,
-    it is possible to stitch the tiles together using sequential read. This is done using libvips/pyvips,
-    which is disabled by default. Please see [INSTALLATION] on how to install libvips
+    it is possible to stitch the tiles together using sequential read, which is disabled by default.
 
     .. attention::
 
-        When vips is used for stitching, the normalised slide will be saved as TIFF file. It is recommended
-        to use vips/openslide for further processing of this normalised mage. Also, this TIFF file will
+        When vips sequential access is used for stitching, the normalised slide will be saved as TIFF file. It is recommended
+        to use vips/openslide for further processing of this normalised image. Also, this TIFF file will
         contain spoofed metadata and can be opened with QuPath
 
     :type: boolean
@@ -225,14 +239,6 @@ All of the parameters may be re-defined by the user prior :class:`NormaliseSlide
 
     :type: string
     :default: :py:attr:`'lzw'`
-
-.. confval:: PIL_MAX_IMAGE_PIXELS
-
-    sets the :py:mod:`PIL`'s :py:attr:`Image.MAX_IMAGE_PIXELS` flag to a higher value, as PIL will fire :py:exc:`DecompressionBombError`
-    otherwise
-
-    :type: integer
-    :default: :py:attr:`2000000000`
 
 .. confval:: thumbnail
 
@@ -251,7 +257,7 @@ All of the parameters may be re-defined by the user prior :class:`NormaliseSlide
 
 .. confval:: OpenSlide_formats
 
-    List of the slide `formats <https://openslide.org/#about-openslide/>`_ which can be handled using OpenSlide and thus by dogsled as well
+    List of the slide `formats <https://openslide.org/#about-openslide/>`_ which can be handled using :py:attr:`libvips` and thus by dogsled as well
 
     :type: list[string]
     :default: :py:attr:`['.svs', '.tif', '.tiff', '.scn', '.vms', '.vmu', '.ndpi', '.mrxs', '.svslide', '.bif']`

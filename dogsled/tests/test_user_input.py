@@ -1,6 +1,7 @@
 from pathlib import Path
 import pytest
 import logging
+import platform
 
 from dogsled.user_input import InputChecker, FileData
 from dogsled.errors import UserInputError
@@ -38,16 +39,22 @@ def test_file_data_qupath_svs(norm_path, test_slides_names, test_slides_i, qupat
                   slides_indexes=test_slides_i,
                   slide_names=test_slides_names,
                   qpproj_path=qupath_project.path,
-                  svs_path=test_slides[0].parents[0],
+                  source_path=test_slides[0].parents[0],
                   rewrite=True)
     assert fd.path_info.norm_slide_path == norm_path
-    assert fd.path_info.svs_path == None
+    assert fd.path_info.source_path == None
     assert fd.path_info.qpproj_path == qupath_project.path
     assert fd.path_info.temp_path == Path(
         norm_path, DEFAULTS['temporary_folder_name'])
 
     assert fd.slide_info.to_process_i == test_slides_i
-    assert fd.slide_info.to_process_paths == test_slides
+    if platform.system() != 'Windows':
+        assert fd.slide_info.to_process_paths == test_slides
+    # inconsistent full path names on Windows- use only file names for now..
+    else:
+        paths_x = [path.name for path in fd.slide_info.to_process_paths]
+        paths_y = [path.name for path in test_slides]
+        assert paths_x == paths_y
 
 
 def test_file_data_qupath(norm_path, test_slides_names, test_slides_i, qupath_project, test_slides):
@@ -56,7 +63,7 @@ def test_file_data_qupath(norm_path, test_slides_names, test_slides_i, qupath_pr
                   slides_indexes=test_slides_i,
                   slide_names=test_slides_names,
                   qpproj_path=qupath_project.path,
-                  svs_path=test_slides[0].parents[0],
+                  source_path=test_slides[0].parents[0],
                   rewrite=True)
     assert fd.path_info.norm_slide_path == norm_path
     assert fd.path_info.qpproj_path == qupath_project.path
@@ -65,7 +72,13 @@ def test_file_data_qupath(norm_path, test_slides_names, test_slides_i, qupath_pr
 
     assert fd.slide_info.indexes == test_slides_i
     assert fd.slide_info.to_process_i == test_slides_i
-    assert fd.slide_info.to_process_paths == test_slides
+    if platform.system() != 'Windows':
+        assert fd.slide_info.to_process_paths == test_slides
+    # inconsistent full path names on Windows- use only file names for now..
+    else:
+        paths_x = [path.name for path in fd.slide_info.to_process_paths]
+        paths_y = [path.name for path in test_slides]
+        assert paths_x == paths_y
 
 
 def test_file_data_svs(norm_path, test_slides_names, test_slides_i, test_slides):
@@ -74,9 +87,9 @@ def test_file_data_svs(norm_path, test_slides_names, test_slides_i, test_slides)
     fd = FileData(norm_path=norm_path,
                   slides_indexes=test_slides_i,
                   slide_names=test_slides_names,
-                  svs_path=test_slides[0].parents[0],
+                  source_path=test_slides[0].parents[0],
                   rewrite=True)
-    assert fd.path_info.svs_path == test_slides[0].parents[0]
+    assert fd.path_info.source_path == test_slides[0].parents[0]
     assert fd.path_info.norm_slide_path == norm_path
     assert fd.path_info.qpproj_path == None
     assert fd.path_info.temp_path == Path(
@@ -120,7 +133,13 @@ def test_file_index_name(norm_path, test_slides_names, qupath_project, test_slid
                   qpproj_path=qupath_project.path,
                   rewrite=True)
     assert fd.slide_info.to_process_i == test_slides_i
-    assert fd.slide_info.to_process_paths == test_slides
+    if platform.system() != 'Windows':
+        assert fd.slide_info.to_process_paths == test_slides
+    # inconsistent full path names on Windows- use only file names for now..
+    else:
+        paths_x = [path.name for path in fd.slide_info.to_process_paths]
+        paths_y = [path.name for path in test_slides]
+        assert paths_x == paths_y
 
 
 def test_file_no_extension(norm_path, qupath_project, test_slides_i, test_slides):
@@ -131,4 +150,10 @@ def test_file_no_extension(norm_path, qupath_project, test_slides_i, test_slides
                   qpproj_path=qupath_project.path,
                   rewrite=True)
     assert fd.slide_info.to_process_i == test_slides_i
-    assert fd.slide_info.to_process_paths == test_slides
+    if platform.system() != 'Windows':
+        assert fd.slide_info.to_process_paths == test_slides
+    # inconsistent full path names on Windows- use only file names for now..
+    else:
+        paths_x = [path.name for path in fd.slide_info.to_process_paths]
+        paths_y = [path.name for path in test_slides]
+        assert paths_x == paths_y
