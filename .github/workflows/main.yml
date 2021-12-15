@@ -25,4 +25,25 @@ jobs:
       - uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+  tests-2:
+    name: Windows tests
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          environment-file: win_environment.yml
+          python-version: 3.9
+          activate-environment: dogsled
+          auto-activate-base: false
+      - run: |
+          conda info
+          conda list
+          pytest --cov-config=dogsled/tests/.coveragerc --cov=dogsled --cov-report=xml
+      - uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
