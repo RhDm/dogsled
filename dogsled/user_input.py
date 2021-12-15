@@ -102,7 +102,7 @@ class InputChecker:
                 f"please check provided indexes (must be zero-based): {out_of_range}")
             raise UserInputError(
                 incorrect_data=str(out_of_range),
-                message=f"please check provided indexes (must be zero-based)"
+                message="please check provided indexes (must be zero-based)"
             )
         return set(provided_slides_i)
 
@@ -115,6 +115,7 @@ class InputChecker:
             out_of_range = [i for i in provided_slides_i if i >
                             (len(slide_names) - 1)]
             return out_of_range
+        return False
 
     @classmethod
     def check_names(cls,

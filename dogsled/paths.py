@@ -18,7 +18,8 @@ class PathChecker:
     def __init__(self) -> None:
         pass
 
-    def str_to_path(self, path: Optional[Union[str, Path]]) -> Path:
+    @staticmethod
+    def str_to_path(path: Optional[Union[str, Path]]) -> Path:
         """Convert string to Paththen check if path exists."""
         if isinstance(path, str):
             path = Path(path)

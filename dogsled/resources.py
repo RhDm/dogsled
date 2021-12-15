@@ -38,7 +38,8 @@ class ResourceEstimator:
         total_required = max(svs_file_sizes) + sum(jpeg_file_sizes)
         return total_required
 
-    def mapping_equation(self, svs_size: int) -> int:
+    @classmethod
+    def mapping_equation(cls, svs_size: int) -> int:
         """Map of svs to jpeg."""
         return int(-2.28 + 1.51 * svs_size)
 

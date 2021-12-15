@@ -26,8 +26,8 @@ class GetLibvips:
         self.libvips_zip = Path(self.libvips_home,
                                 "vips-dev-w64-web-x.xx.x-static.zip")
 
-    @staticmethod
-    def md5_gen(file) -> str:
+    @classmethod
+    def md5_gen(cls, file) -> str:
         """Calculate md5 of a file."""
         md5_h = hashlib.md5()
         with open(file, "rb") as f:
@@ -38,7 +38,8 @@ class GetLibvips:
                 md5_h.update(chunk)
         return md5_h.hexdigest()
 
-    def libvips_folder(self, parent) -> Path:
+    @classmethod
+    def libvips_folder(cls, parent) -> Path:
         """Create folder where libvips will live."""
         path = Path(Path(parent).parents[1], "lib")
         try:
@@ -50,7 +51,7 @@ class GetLibvips:
 
     def download_dlls(self) -> None:
         """Download libvips .zip, unpacks, checks md5."""
-        LOGGER.info(f"downloading libvips")
+        LOGGER.info("downloading libvips")
         url = DEFAULTS["libvips_url"]
 
         with urllib.request.urlopen(url) as response, open(self.libvips_zip, "wb") as out_file:

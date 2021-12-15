@@ -615,7 +615,7 @@ class NormaliseSlides:
                 f"available on the seleced disk (norm_path): {free_space} MB")
         else:
             LOGGER.warning(
-                f"normalisation of the selected slides might require significant space")
+                "normalisation of the selected slides might require significant space")
             LOGGER.warning(
                 f"available on the seleced disk (norm_path): {free_space} MB")
 
@@ -654,7 +654,8 @@ class NormaliseSlides:
             SlideTiler.jpeg_stitcher(stain_type, self.current_slide)
         LOGGER.info_regular("so far, so good")  # when everything is finisehed
 
-    def cleaner(self, stain_type: str, current_slide: CurrentSlide) -> None:
+    @classmethod
+    def cleaner(cls, stain_type: str, current_slide: CurrentSlide) -> None:
         """Remove temporary files after finished normalisation
         if detects that the normalised slide and tiles are present.
         !! does not remove the temporary folder !!

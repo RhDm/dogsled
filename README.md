@@ -5,12 +5,13 @@
 [![tests workflow](https://github.com/RhDm/dogsled/actions/workflows/main.yml/badge.svg)](https://github.com/RhDm/dogsled/actions/workflows/main.yml)
 [![codecov](https://codecov.io/gh/RhDm/dogsled/branch/main/graph/badge.svg?token=WMIQ6MD1UK)](https://codecov.io/gh/RhDm/dogsled)
 [![Documentation Status](https://readthedocs.org/projects/dogsled/badge/?version=latest)](https://dogsled.readthedocs.io/en/latest/?badge=latest)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/2434dda69e6d44079069e23520cf04cb)](https://www.codacy.com/gh/RhDm/dogsled/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=RhDm/dogsled&amp;utm_campaign=Badge_Grade)
 
 <br>
 
 `dogsled` is an open-source Python package that does only one thing: Macenko [1] stain normalisation of large medical slides (OpenSlide formats). It generates either JPEG or TIFF normalised image.
 
-*It is crucial to have a dataset of high quality when, for example, training deep learning models. When working with medical slides, the colour might differ from slide to slide, making it harder to work with them as it causes heterogenicity in the data set. Stain normalisation is one of the techniques used to mitigate this hurdle and homogenise the slide colour. However, the size of the medical slides, which can go beyond gigapixel, makes it challenging to perform such a task. No worries, `dogsled` is there to help you.*
+_It is crucial to have a dataset of high quality when, for example, training deep learning models. When working with medical slides, the colour might differ from slide to slide, making it harder to work with them as it causes heterogenicity in the data set. Stain normalisation is one of the techniques used to mitigate this hurdle and homogenise the slide colour. However, the size of the medical slides, which can go beyond gigapixel, makes it challenging to perform such a task. No worries, `dogsled` is there to help you._
 
 Why *dogsled*? Well, first of all, because of the dogs. Second, because together many dogs can push a cargo too heavy for one dog to handle. Similarily, dogsled divides heavy computations into smaller ones. As with many algorithms and life situations, divide and conquer, right?
 
