@@ -1,3 +1,8 @@
+"""
+Currently, only logging lives here
+
+"""
+
 import logging
 import logging.config
 from dogsled import config

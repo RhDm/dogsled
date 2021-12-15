@@ -1,14 +1,13 @@
-'''
+"""
 Custom errors
-'''
+"""
 from typing import Optional
 
 
 class UserInputError(ValueError):
-    '''
-    invalid user-defined constant
-    path/slide name/slide index
-    '''
+    """Invalid user-defined constant
+    path/slide name/slide index.
+    """
 
     def __init__(self,
                  message: str,
@@ -19,9 +18,7 @@ class UserInputError(ValueError):
 
 
 class CleaningError(Exception):
-    '''
-    when something went wrong during cleaning
-    '''
+    """When something went wrong during cleaning."""
 
     def __init__(self,
                  message: str) -> None:
@@ -30,8 +27,9 @@ class CleaningError(Exception):
 
 
 class LibVipsError(ModuleNotFoundError):
-    '''when libvips has to be downloaded for Linux/macOS
-    ..homebrew etc'''
+    """When libvips has to be downloaded for Linux/macOS
+    ..homebrew etc.
+    """
 
     def __init__(self,
                  message: str) -> None:

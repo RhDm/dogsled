@@ -16,7 +16,7 @@ def test_str_to_path(norm_path):
 
 def test_wrong_path():
     with pytest.raises(UserInputError):
-        PathChecker().str_to_path('some/non-existent/path')
+        PathChecker().str_to_path("some/non-existent/path")
 
 
 def test_creating_existing_path(norm_path):

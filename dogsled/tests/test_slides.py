@@ -22,6 +22,6 @@ def test_with_qpproj_str(qupath_project):
 
 def test_with_wrong_path():
     with pytest.raises(UserInputError):
-        _ = QuPathSlides(qpproj_path=Path('random/path'))
+        _ = QuPathSlides(qpproj_path=Path("random/path"))
     with pytest.raises(UserInputError):
-        _ = QuPathSlides(qpproj_path='random/path')
+        _ = QuPathSlides(qpproj_path="random/path")

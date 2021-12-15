@@ -1,9 +1,10 @@
-''''
+"""
+
 Path manager
 
 Checks whether the user-provided folders exist
 Creates a sub-folder system & checks if folders already exist
-'''''
+"""
 from pathlib import Path
 import logging
 from typing import Union, Optional
@@ -13,35 +14,28 @@ LOGGER = logging.getLogger(__name__)
 
 
 class PathChecker:
-    '''
-    simple class for reading the user-provided path as str or Path
-    & checking if path is correctly defined
-    '''
+    """Simple class for reading the user-provided path as str or Path
+    & checking if path is correctly defined.
+    """
 
     def __init__(self) -> None:
         pass
 
     def str_to_path(self, path: Optional[Union[str, Path]]) -> Path:
-        '''
-        convert string to Path
-        then check if path exists
-        '''
+        """Convert string to Paththen check if path exists."""
         if isinstance(path, str):
             path = Path(path)
         if path is None or not path.exists():
-            LOGGER.exception(f'path {path} does not exist')
+            LOGGER.exception(f"path {path} does not exist")
             raise UserInputError(
                 incorrect_data=str(path),
-                message=f'path {path} does not exist'
+                message=f"path {path} does not exist"
             )
         return path
 
 
 class PathCreator:
-    '''
-    creates path if it does not exist
-    rewrites it if rewrite = True
-    '''
+    """Creates path if it does not exist, rewrites it if rewrite = True"""
 
     def __init__(self) -> None:
         pass
@@ -50,9 +44,7 @@ class PathCreator:
     def create_path(path: Path,
                     child_path: Optional[Union[Path, str]] = None,
                     rewrite=False) -> None:
-        '''
-        checks if parent path exists, creates child path in it
-        '''
+        """Checks if parent path exists, creates child path in it."""
         if child_path:
             path = Path(path, child_path)
         try:
@@ -61,11 +53,11 @@ class PathCreator:
             if not path.exists():
                 raise UserInputError(
                     incorrect_data=str(path),
-                    message=f'path {path} can not be created'
+                    message=f"path {path} can not be created"
                 )
         except FileExistsError:
             raise UserInputError(
                 incorrect_data=str(path),
-                message=f'path {path} already exist; plese set \
-                    rewrite to True or define another path'
+                message=f"path {path} already exist; plese set \
+                    rewrite to True or define another path"
             )

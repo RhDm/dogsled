@@ -22,7 +22,7 @@ def test_input_checker_wrong_i(test_slides_names, test_slides_i):
     wrong_i = test_slides_i[:]
     wrong_i.append(len(test_slides_i) + 1)
     wrong_names = test_slides_names[:]
-    wrong_names.append('some_random_slide_name.svs')
+    wrong_names.append("some_random_slide_name.svs")
     with pytest.raises(UserInputError):
         _ = InputChecker(slide_names=test_slides_names,
                          provided_slides_names=test_slides_names,
@@ -34,7 +34,7 @@ def test_input_checker_wrong_i(test_slides_names, test_slides_i):
 
 
 def test_file_data_qupath_svs(norm_path, test_slides_names, test_slides_i, qupath_project, test_slides):
-    '''when qupath project file and svs path are defined'''
+    """When qupath project file and svs path are defined."""
     fd = FileData(norm_path=norm_path,
                   slides_indexes=test_slides_i,
                   slide_names=test_slides_names,
@@ -45,10 +45,10 @@ def test_file_data_qupath_svs(norm_path, test_slides_names, test_slides_i, qupat
     assert fd.path_info.source_path == None
     assert fd.path_info.qpproj_path == qupath_project.path
     assert fd.path_info.temp_path == Path(
-        norm_path, DEFAULTS['temporary_folder_name'])
+        norm_path, DEFAULTS["temporary_folder_name"])
 
     assert fd.slide_info.to_process_i == test_slides_i
-    if platform.system() != 'Windows':
+    if platform.system() != "Windows":
         assert fd.slide_info.to_process_paths == test_slides
     # inconsistent full path names on Windows- use only file names for now..
     else:
@@ -58,7 +58,7 @@ def test_file_data_qupath_svs(norm_path, test_slides_names, test_slides_i, qupat
 
 
 def test_file_data_qupath(norm_path, test_slides_names, test_slides_i, qupath_project, test_slides):
-    '''when only qupath project file defined'''
+    """When only qupath project file defined."""
     fd = FileData(norm_path=norm_path,
                   slides_indexes=test_slides_i,
                   slide_names=test_slides_names,
@@ -68,11 +68,11 @@ def test_file_data_qupath(norm_path, test_slides_names, test_slides_i, qupath_pr
     assert fd.path_info.norm_slide_path == norm_path
     assert fd.path_info.qpproj_path == qupath_project.path
     assert fd.path_info.temp_path == Path(
-        norm_path, DEFAULTS['temporary_folder_name'])
+        norm_path, DEFAULTS["temporary_folder_name"])
 
     assert fd.slide_info.indexes == test_slides_i
     assert fd.slide_info.to_process_i == test_slides_i
-    if platform.system() != 'Windows':
+    if platform.system() != "Windows":
         assert fd.slide_info.to_process_paths == test_slides
     # inconsistent full path names on Windows- use only file names for now..
     else:
@@ -82,7 +82,7 @@ def test_file_data_qupath(norm_path, test_slides_names, test_slides_i, qupath_pr
 
 
 def test_file_data_svs(norm_path, test_slides_names, test_slides_i, test_slides):
-    '''when only svs path is defined'''
+    """When only svs path is defined."""
     sorted_test_slides = test_slides[:].sort()
     fd = FileData(norm_path=norm_path,
                   slides_indexes=test_slides_i,
@@ -93,20 +93,20 @@ def test_file_data_svs(norm_path, test_slides_names, test_slides_i, test_slides)
     assert fd.path_info.norm_slide_path == norm_path
     assert fd.path_info.qpproj_path == None
     assert fd.path_info.temp_path == Path(
-        norm_path, DEFAULTS['temporary_folder_name'])
+        norm_path, DEFAULTS["temporary_folder_name"])
 
     assert fd.slide_info.to_process_i == test_slides_i
     assert fd.slide_info.to_process_paths.sort() == sorted_test_slides
 
 
 def test_file_data_no_info(norm_path):
-    '''when used does not provide any information'''
+    """When used does not provide any information."""
     with pytest.raises(UserInputError):
         _ = FileData(norm_path=norm_path)
 
 
 def test_file_data_no_svs_no_qupath(norm_path, test_slides_names, test_slides_i):
-    '''when svs path and qpproj path are not provided'''
+    """When svs path and qpproj path are not provided."""
     with pytest.raises(UserInputError):
         _ = FileData(norm_path=norm_path,
                      slides_indexes=test_slides_i,
@@ -115,7 +115,7 @@ def test_file_data_no_svs_no_qupath(norm_path, test_slides_names, test_slides_i)
 
 
 def test_file_data_wrong_index(norm_path, test_slides_names, test_slides_i, qupath_project):
-    '''wrong indexes passed to FileData'''
+    """Wrong indexes passed to FileData."""
     wrong_i = test_slides_i[:]
     wrong_i.append(len(test_slides_i) + 1)
     with pytest.raises(UserInputError):
@@ -126,14 +126,14 @@ def test_file_data_wrong_index(norm_path, test_slides_names, test_slides_i, qupa
 
 
 def test_file_index_name(norm_path, test_slides_names, qupath_project, test_slides_i, test_slides):
-    '''when index 0 and name 1'''
+    """When index 0 and name 1."""
     fd = FileData(norm_path=norm_path,
                   slides_indexes=[0],
                   slide_names=test_slides_names[1],
                   qpproj_path=qupath_project.path,
                   rewrite=True)
     assert fd.slide_info.to_process_i == test_slides_i
-    if platform.system() != 'Windows':
+    if platform.system() != "Windows":
         assert fd.slide_info.to_process_paths == test_slides
     # inconsistent full path names on Windows- use only file names for now..
     else:
@@ -143,14 +143,14 @@ def test_file_index_name(norm_path, test_slides_names, qupath_project, test_slid
 
 
 def test_file_no_extension(norm_path, qupath_project, test_slides_i, test_slides):
-    '''when index 0 and name 1 without extension'''
+    """When index 0 and name 1 without extension."""
     fd = FileData(norm_path=norm_path,
                   slides_indexes=[0],
                   slide_names=test_slides[1].stem,
                   qpproj_path=qupath_project.path,
                   rewrite=True)
     assert fd.slide_info.to_process_i == test_slides_i
-    if platform.system() != 'Windows':
+    if platform.system() != "Windows":
         assert fd.slide_info.to_process_paths == test_slides
     # inconsistent full path names on Windows- use only file names for now..
     else:

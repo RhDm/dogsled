@@ -7,8 +7,8 @@ LOGGER = logging.getLogger(__name__)
 
 
 def test_vips_download():
-    '''goes through the downloading rutine & checks whether the vips.exe exists'''
-    vips_getter = GetLibvips('dogsled/tests/data')
+    """Goes through the downloading rutine & checks whether the vips.exe exists."""
+    vips_getter = GetLibvips("dogsled/tests/data")
     vips_path = vips_getter.get_path()
-    assert Path(vips_path, 'vips.exe').exists()
+    assert Path(vips_path, "vips.exe").exists()
     LOGGER.info(vips_path)

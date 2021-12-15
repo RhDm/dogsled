@@ -8,25 +8,27 @@
 
 <br>
 
-`dogsled` is an open-source Python package that does only one thing: Macenko [1] stain normalisation of large medical slides (OpenSlide formats). It generates either JPEG or TIFF normalised image
+`dogsled` is an open-source Python package that does only one thing: Macenko [1] stain normalisation of large medical slides (OpenSlide formats). It generates either JPEG or TIFF normalised image.
 
+*It is crucial to have a dataset of high quality when, for example, training deep learning models. When working with medical slides, the colour might differ from slide to slide, making it harder to work with them as it causes heterogenicity in the data set. Stain normalisation is one of the techniques used to mitigate this hurdle and homogenise the slide colour. However, the size of the medical slides, which can go beyond gigapixel, makes it challenging to perform such a task. No worries, `dogsled` is there to help you.*
 
 Why *dogsled*? Well, first of all, because of the dogs. Second, because together many dogs can push a cargo too heavy for one dog to handle. Similarily, dogsled divides heavy computations into smaller ones. As with many algorithms and life situations, divide and conquer, right?
 
 # `dogsled` is in late alpha phase
 if you spot a bug or have a suggestion feel free to open an issue
+
 if wish to test `dogsled` and need the data, feel free to drop me an email at: dmitri.stepanov1@gmail.com
 
 ## Quirks and features
 
 Currently, `dogsled` can:
-- normalise all slides located in a specified folder
-- normalise slides specified by name
-- normalise slides defined in a QuPath library (either all or the ones specified by name and/or index)
-- generate JPEG equivalents of the normalised slides
-- generate TIFF equivalents of the normalised slides (also for large slides not fitting in RAM)
-- create hematoxylin/eosin decoupled normalised images
-- create thumbnails of all slides (pre-normalised and normalised)
+  - normalise all slides located in a specified folder
+  - normalise slides specified by name
+  - normalise slides defined in a QuPath library (either all or the ones specified by name and/or index)
+  - generate JPEG equivalents of the normalised slides
+  - generate TIFF equivalents of the normalised slides (also for large slides not fitting in RAM)
+  - create hematoxylin/eosin decoupled normalised images
+  - create thumbnails of all slides (pre-normalised and normalised)
 
 ## Documentation
 `dogsled` about page, quickstart, installation and API can be found at [dogsled.readthedocs.io](https://dogsled.readthedocs.io)

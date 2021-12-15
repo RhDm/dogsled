@@ -9,7 +9,7 @@ from dogsled.defaults import DEFAULTS
 LOGGER = logging.getLogger(__name__)
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def space_required(test_slides):
     jpeg_sizes = [int(-2.28 + 1.51 * x.stat().st_size) for x in test_slides]
     slide_sizes = [x.stat().st_size for x in test_slides]
@@ -17,17 +17,17 @@ def space_required(test_slides):
 
 
 def test_space_estimator(test_slides, space_required):
-    ''' uses -2.28 + 1.51 * svs_size'''
+    """Uses -2.28 + 1.51 * svs_size."""
     required = ResourceEstimator(test_slides).space_required
     assert space_required == required
 
 
 def test_tile_size():
     ram_available = psutil.virtual_memory().available >> 20
-    if ram_available <= min(DEFAULTS['ram_megapixel'].keys()):
-        side = DEFAULTS['ram_megapixel'][min(DEFAULTS['ram_megapixel'].keys())]
+    if ram_available <= min(DEFAULTS["ram_megapixel"].keys()):
+        side = DEFAULTS["ram_megapixel"][min(DEFAULTS["ram_megapixel"].keys())]
     else:
-        side = DEFAULTS['ram_megapixel'][max(DEFAULTS['ram_megapixel'].keys())]
+        side = DEFAULTS["ram_megapixel"][max(DEFAULTS["ram_megapixel"].keys())]
     assert side == ResourceChecker().tile_size
 
 

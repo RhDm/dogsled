@@ -1,5 +1,6 @@
-''''
+"""
 User input manager
+
 The user can profide the following data:
     - path to the QuPath project
         - or a path to the folder containing SVS slides
@@ -12,7 +13,7 @@ checks & verifies all user-provided info:
     - collects full paths of the slides which are defined for normalisation
 If no names or idexes of the slides are provided, all slides in the folder/Qupath
 project are normalised
-'''''
+"""
 import re
 import logging
 from pathlib import Path
@@ -37,28 +38,26 @@ path_creator = PathCreator()
 
 @dataclass(repr=True)
 class UserSlideInput:
-    '''
-    class for holding all user-selected slide data:
+    """Class for holding all user-selected slide data:
     user-defined names of slides
     user-defined indexes of slides
-    processed indexes of slices (ones to normalise)
-    '''
+    processed indexes of slices (ones to normalise).
+    """
     names: List = field(default_factory=list)
     indexes: List = field(default_factory=list)
     to_process_i: List = field(default_factory=list)
     to_process_paths: List = field(default_factory=list)
 
-    def __str__(self) -> str:  # info for the user => __str__
-        return f'provided slide indexes: {self.to_process_i},\n\
+    def __str__(self) -> str:
+        """Info for the user => __str__"""
+        return f"provided slide indexes: {self.to_process_i},\n\
             names: {self.names}\n\
-            slides to normalise: {*[slide.name for slide in self.to_process_paths],}'
+            slides to normalise: {*[slide.name for slide in self.to_process_paths],}"
 
 
 @dataclass(repr=True)
 class SystemPaths:
-    '''
-    class for holding all user-defined and derived paths
-    '''
+    """Class for holding all user-defined and derived paths."""
     norm_slide_path: Path
     temp_path: Optional[Path] = None
     source_path: Optional[Path] = None
@@ -66,24 +65,24 @@ class SystemPaths:
 
     def __str__(self) -> str:
         if self.qpproj_path:
-            return f'QuPath project at at: {self.qpproj_path}\n\
+            return f"QuPath project at at: {self.qpproj_path}\n\
                 path for normalised slides: {self.norm_slide_path},\n\
-                temporary path: {self.temp_path}'
-        return f'slides at {self.source_path}\n\
+                temporary path: {self.temp_path}"
+        return f"slides at {self.source_path}\n\
                 path for normalised slides: {self.norm_slide_path},\n\
-                temporary path: {self.temp_path}'
+                temporary path: {self.temp_path}"
 
 
 class InputChecker:
-    '''
-    class for checking all user-defined constants, i.e. paths & selected slides
-    '''
+    """Class for checking all user-defined constants,
+    i.e. paths & selected slides.
+    """
 
     def __init__(self,
                  slide_names: List[str],
                  provided_slides_names: List[str],
                  provided_slides_i: List[int]) -> None:
-        '''take provided info, return valid index list'''
+        """Take provided info, return valid index list."""
         self.indexes = self.controller(slide_names,
                                        provided_slides_names,
                                        provided_slides_i)
@@ -92,19 +91,18 @@ class InputChecker:
     def check_indexes(cls,
                       slide_names: List[str],
                       provided_slides_i: Optional[List[int]] = None) -> set:
-        '''
-        checks if the user-defined indexes are valid
-        raises error if not & tells which ones are wrong
-        '''
+        """Checks if the user-defined indexes are valid
+        raises error if not & tells which ones are wrong.
+        """
         if not provided_slides_i:
             return set()
 
         if (out_of_range := InputChecker.check_index_range(provided_slides_i, slide_names)):
             LOGGER.error(
-                f'please check provided indexes (must be zero-based): {out_of_range}')
+                f"please check provided indexes (must be zero-based): {out_of_range}")
             raise UserInputError(
                 incorrect_data=str(out_of_range),
-                message=f'please check provided indexes (must be zero-based)'
+                message=f"please check provided indexes (must be zero-based)"
             )
         return set(provided_slides_i)
 
@@ -112,7 +110,7 @@ class InputChecker:
     def check_index_range(cls,
                           provided_slides_i: List[int],
                           slide_names: List[str]):
-        '''checks for correctness of the indexes'''
+        """Checks for correctness of the indexes."""
         if max(provided_slides_i) > (len(slide_names) - 1):
             out_of_range = [i for i in provided_slides_i if i >
                             (len(slide_names) - 1)]
@@ -122,11 +120,10 @@ class InputChecker:
     def check_names(cls,
                     slide_names: List[str],
                     provided_slides_names: Optional[List[str]] = None) -> set:
-        '''
-        checks if the user-defined names (with or without '.svs') are valid
+        """Checks if the user-defined names (with or without ".svs") are valid
         raises error if not & tell which one is wrong
-        returns indexes of the provided names
-        '''
+        returns indexes of the provided names.
+        """
         if not provided_slides_names:
             return set()
 
@@ -135,15 +132,15 @@ class InputChecker:
 
         to_process = set()
         for name in provided_slides_names:
-            if not re.search('.svs', name):
-                name += '.svs'
+            if not re.search(".svs", name):
+                name += ".svs"
             try:
                 to_process.add(slide_names.index(name))
             except ValueError:
-                LOGGER.error(f'please check provided slide name: {name}')
+                LOGGER.error(f"please check provided slide name: {name}")
                 raise UserInputError(
                     incorrect_data=name,
-                    message=f'please check provided slide name: {name}'
+                    message=f"please check provided slide name: {name}"
                 )
         return to_process
 
@@ -151,11 +148,10 @@ class InputChecker:
                    slide_names: List[str],
                    provided_slides_names: List[str],
                    provided_slides_i: List[int]) -> List[int]:
-        '''
-        combines sets of indexes derived from the user-devined names and
+        """Combines sets of indexes derived from the user-devined names and
         indexes, combines them into one set
-        converts to a list (slight performance improvement..?)
-        '''
+        converts to a list (slight performance improvement..?).
+        """
         indexes = InputChecker.check_indexes(slide_names, provided_slides_i)
         indexes.update(InputChecker.check_names(
             slide_names, provided_slides_names))
@@ -163,11 +159,11 @@ class InputChecker:
 
 
 class FileData:
-    '''
-    combines all data together
+    """Combines all data together
     i.e. all paths, slide names, slide indexes
-    if path with svs and QuPath project paths are specified, QuPath project has priority
-    '''
+    if path with svs and QuPath project paths are specified,
+    QuPath project has priority.
+    """
 
     def __init__(self,
                  norm_path: Union[str, Path],
@@ -190,8 +186,8 @@ class FileData:
                                                  slides_indexes)
 
     def __repr__(self) -> str:
-        return f'paths: {self.path_info}\n\
-            slides: {self.slide_info}'
+        return f"paths: {self.path_info}\n\
+            slides: {self.slide_info}"
 
     def system_paths(self,
                      norm_slide_path: Union[str, Path],
@@ -199,19 +195,18 @@ class FileData:
                      qpproj_path: Optional[Union[str, Path]] = None,
                      temp_path: Optional[Union[str, Path]] = None,
                      rewrite_flag=False) -> SystemPaths:
-        '''
-        returns instance of UserSlideInput which holds
+        """Returns instance of UserSlideInput which holds
         controlled system paths
         if both, source_path and qpproj_path, are provided, then qpproj_path has priority
         created paths (temporary path)
-        temporary path is created either at the given path or as temp folder in norm_slide_path)
-        '''
+        temporary path is created either at the given path or as temp folder in norm_slide_path).
+        """
         if not source_path and not qpproj_path:
             LOGGER.error(
-                f'either path with SVS slides or QuPath project path must be provided')
+                f"either path with SVS slides or QuPath project path must be provided")
             raise UserInputError(
-                incorrect_data='',
-                message=f'either path with SVS slides or QuPath project path must be provided'
+                incorrect_data="",
+                message=f"either path with SVS slides or QuPath project path must be provided"
             )
         path_holder = SystemPaths(
             norm_slide_path=path_checker.str_to_path(norm_slide_path)
@@ -227,7 +222,7 @@ class FileData:
             temp_path = path_checker.str_to_path(temp_path)
         else:
             temp_path = Path(path_holder.norm_slide_path,
-                             DEFAULTS['temporary_folder_name'],)
+                             DEFAULTS["temporary_folder_name"],)
         path_creator.create_path(temp_path, rewrite=rewrite_flag)
         path_holder.temp_path = temp_path
 
@@ -236,23 +231,22 @@ class FileData:
     @staticmethod
     def qupath_image_path(index: int,
                           paquo_project: QuPathProject) -> Path:
-        '''
-        produces valid path to the svs slide given index in the paquo project image entry
-        '''
+        """Produces valid path to the svs slide given index in the paquo
+        project image entry.
+        """
         # TODO probably should be replaced- too slow
         try:
-            str_path = re.search('.*file:(.+(\.svs|\.tif|\.scn|\.vms|\.vmu|\.ndpi|\.mrxs|\.svslide|\.bif))',
+            str_path = re.search(".*file:(.+(\.svs|\.tif|\.scn|\.vms|\.vmu|\.ndpi|\.mrxs|\.svslide|\.bif))",
                                  str(paquo_project.images[index]._image_server.getPath()))[1]
             return Path(unquote(str_path))
         except:
-            raise UserInputError(message='can\'t process Qupath over paquo')
+            raise UserInputError(message="can\"t process Qupath over paquo")
 
     def get_slide_names(self,
                         path_info: SystemPaths) -> Tuple[list[str], Optional[QuPathProject]]:
-        '''
-        returns all names of the slides in the QuPath project
-        or at the given path
-        '''
+        """Returns all names of the slides in the QuPath project
+        or at the given path.
+        """
         if path_info.qpproj_path:  # user-provided qupath project file has priority
             paquo_project = QuPathSlides(path_info.qpproj_path).pq
             all_slide_names = [
@@ -261,7 +255,7 @@ class FileData:
             paquo_project = None
             all_slide_names = [slide.name for slide in
                                path_info.source_path.iterdir()
-                               if slide.suffix == '.svs' and not slide.name.startswith('.')]
+                               if slide.suffix == ".svs" and not slide.name.startswith(".")]
 
         return all_slide_names, paquo_project
 
@@ -269,13 +263,12 @@ class FileData:
                           path_info: SystemPaths,
                           slide_names: Optional[List[str]],
                           slide_indexes: Optional[List[int]]) -> UserSlideInput:
-        '''
-        creates instance of UserSlideInput which holds
+        """Creates instance of UserSlideInput which holds
         user-defined indexes of slides (only if qpproj path is defined)
         user-defined names of slides (if svs path or qpproj path are defined)
         processed indexes
-        instance of SystemPaths must be previously created
-        '''
+        instance of SystemPaths must be previously created.
+        """
         slide_info = UserSlideInput(names=slide_names,
                                     indexes=slide_indexes)
 
