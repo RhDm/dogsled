@@ -27,7 +27,7 @@ DEFAULTS = {
     "vips_tiff_compression": "lzw",
     "thumbnail": True,
     "thumbnail_max_side": 6000,
-    "vips_sticher": False,
+    "vips_stitcher": False,
     "OpenSlide_formats": [".svs", ".tif", ".tiff", ".scn",
                           ".vms", ".vmu", ".ndpi", ".mrxs",
                           ".svslide", ".bif"],

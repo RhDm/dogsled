@@ -82,7 +82,7 @@ If the last logged event states the name of the stitched slide or the status of 
                                  source_path = '/Users/uname/slides/',
                                  qpproj_path = '/Users/uname/QuPath_projects/project.qpproj',
                                  slide_names = ['SAS_21883_001.svs'])
-    DEFAULTS['vips_sticher']= True
+    DEFAULTS['vips_stitcher']= True
     normaliser.repeat_stitching()
 
 .. note::
@@ -116,7 +116,7 @@ This dictionary holds constants used for normalisation and some other normalisat
                 'vips_tiff_compression': 'lzw',
                 'thumbnail': True,
                 'thumbnail_max_side': 6000,
-                'vips_sticher': False,
+                'vips_stitcher': False,
                 'OpenSlide_formats': ['.svs', '.tif', '.tiff', '.scn', '.vms', '.vmu', '.ndpi', '.mrxs', '.svslide', '.bif'],
                 'first_tile': 'middle',
                 # normalisation constants:
@@ -137,7 +137,7 @@ All of the parameters may be re-defined by the user prior :class:`NormaliseSlide
     from dogsled.defaults import DEFAULTS
 
     DEFAULTS['output_type'] = ['norm', 'he', 'eo']
-    DEFAULTS['vips_sticher'] = True
+    DEFAULTS['vips_stitcher'] = True
 
     normaliser = NormaliseSlides(source_path = '/Users/uname/slides/',
                                  qpproj_path = '/Users/uname/QuPath_projects/project.qpproj',
@@ -218,7 +218,7 @@ All of the parameters may be re-defined by the user prior :class:`NormaliseSlide
     :type: integer
     :default: :py:attr:`95`
 
-.. confval:: vips_sticher
+.. confval:: vips_stitcher
 
     If large slides are handled, their tiles might not fit into the memory at once when stitched
     together (e.g. slides with 40x magnification and size over 100,000pixels per side). In these cases,

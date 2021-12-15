@@ -41,7 +41,7 @@ for interactions with QuPath files (installed automatically together with dogsle
 
 
 In case you plan to work with large slides (over 100,000pixels per side), or if your system can not handle
-smaller slide sizes causing a crash, you might want to set :py:mod:`vips_sticher` key value of the :py:attr:`DEFAULTS`
+smaller slide sizes causing a crash, you might want to set :py:mod:`vips_stitcher` key value of the :py:attr:`DEFAULTS`
 dictionary to :py:attr:`True`, see `API <api.html#confval-prefer_vips>`__ for further details.
 
 

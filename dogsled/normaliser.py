@@ -408,7 +408,7 @@ class SlideTiler:
         """Stitch normalised slide tiles (located in the temporary folder) together."""
         LOGGER.info("stitching image together")
         # if libvips stitching is prefered by the user
-        if DEFAULTS["vips_sticher"]:
+        if DEFAULTS["vips_stitcher"]:
             SlideTiler.vips_stitcher(*args)
         else:
             SlideTiler.stitcher(*args)
@@ -471,18 +471,20 @@ class SlideTiler:
         thumbnail.jpegsave(str(path), Q=90)
 
     @staticmethod
-    def thumbnail_from_image(slide: CurrentSlide, stain_type: Optional[str] = None) -> None:
+    def thumbnail_from_image(slide: CurrentSlide,
+                             stain_type: Optional[str] = None,
+                             slide_extension: Optional[str] = None) -> None:
         """Create thumbnail from the sourde slide."""
         twidth, theight = SlideTiler.thumbnail_size(slide.wh)
-        if stain_type:
+        if stain_type:  # creating normalised thumbnail
             LOGGER.info(f"creating {stain_type} thumbnail")
             slide_path = Path(
-                slide.norm_path, f"{stain_type}_{slide.slide_path.stem}.jpeg")
+                slide.norm_path, f"{stain_type}_{slide.slide_path.stem}.{slide_extension}")
             thumbnail = pyvips.Image.thumbnail(
                 str(slide_path), twidth, height=theight)
             path = Path(slide.norm_path,
                         f"thumbnail_{stain_type}_{slide.slide_path.stem}.jpeg")
-        else:
+        else:  # creating thumbnail from source slide
             LOGGER.info("creating slide thumbnail")
             thumbnail = slide.os_slide.thumbnail_image(twidth, height=theight)
             path = Path(slide.norm_path,
@@ -525,7 +527,9 @@ class SlideTiler:
         LOGGER.info("stitching finished & TIF saved")
 
         if DEFAULTS["thumbnail"]:
-            SlideTiler.thumbnail_from_image(current_slide, stain_type)
+            SlideTiler.thumbnail_from_image(slide=current_slide,
+                                            stain_type=stain_type,
+                                            slide_extension='tif')
 
     @staticmethod
     def thumbnail_size(slide_width_height: Tuple[int, int]) -> Tuple[int, int]:

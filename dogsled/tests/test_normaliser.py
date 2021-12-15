@@ -303,7 +303,7 @@ def small_slide_ref_vips_tiff():
 
 def test_vips_stitching(small_slide_ref_vips_tiff):
     """Make dogsled treat small slide as a big slide and use vips stitcher."""
-    DEFAULTS["vips_sticher"] = True
+    DEFAULTS["vips_stitcher"] = True
     DEFAULTS["ram_megapixel"] = {8000: 1500, 8001: 1500}
     normaliser = NormaliseSlides(source_path=DATA_PATH,
                                  slide_names="CMU-1-Small-Region.svs",
