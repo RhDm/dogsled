@@ -6,6 +6,7 @@
 [![codecov](https://codecov.io/gh/RhDm/dogsled/branch/main/graph/badge.svg?token=WMIQ6MD1UK)](https://codecov.io/gh/RhDm/dogsled)
 [![Documentation Status](https://readthedocs.org/projects/dogsled/badge/?version=latest)](https://dogsled.readthedocs.io/en/latest/?badge=latest)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/2434dda69e6d44079069e23520cf04cb)](https://www.codacy.com/gh/RhDm/dogsled/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=RhDm/dogsled&amp;utm_campaign=Badge_Grade)
+[![PyPI version](https://badge.fury.io/py/dogsled.svg)](https://badge.fury.io/py/dogsled)
 
 <br>
 
