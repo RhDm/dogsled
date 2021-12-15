@@ -1,4 +1,4 @@
-"""Normaliser"""
+"""Normaliser."""
 import os
 import platform
 import logging
@@ -29,7 +29,6 @@ NB_DTYPE = DEFAULTS["numba_dtype"]
 # ugly, but works for windows
 if platform.system() == "Windows":
     """If pyvips could nor be imported & Windows is used
-
     => download libvips, register DLLs.
     """
     vips_getter = GetLibvips()
@@ -63,11 +62,9 @@ if "line_profiler" not in dir() and "profile" not in dir():
 
 
 class ProcessLogger:
-
-    """Class for user-friendly logging:
-
-            regular logging with newlines in terminal
-            logging with clearing previous output in Jupyter.
+    """Class for user-friendly logging.
+    - regular logging with newlines in terminal
+    - logging with clearing previous output in Jupyter.
     """
 
     def __init__(self, logger: logging.Logger) -> None:
@@ -103,9 +100,8 @@ class ProcessLogger:
         self.tile_n += 1
 
     def info(self, message: str):
-        """Main status logger
-
-        format: Slide 1/12 SlideName.svs tile 1/12 operation_name.
+        """Main status logger.
+        Format: Slide 1/12 SlideName.svs tile 1/12 operation_name.
         """
         if not self.slide_name:  # for testing runs or status logging outside of normalisation
             self.info_regular(message)
@@ -127,14 +123,13 @@ LOGGER = ProcessLogger(LOGGER)
 
 
 class Normalisation:
-
     """All heavylifting is defined here."""
 
     @staticmethod
     @profile
     def read_sector(slide: pyvips.vimage.Image, location: Tuple[int, int],
                     size_wh: Tuple[int, int]) -> npt.NDArray[Any]:
-        """Reads a slide sector, swaps the channels, returns as numpy array."""
+        """Read a slide sector, swap the channels, return as numpy array."""
         LOGGER.info("reading slide sector")
         left, top = location  # inversed for pyvips?
         width, height = size_wh
@@ -148,14 +143,13 @@ class Normalisation:
     @staticmethod
     @nb.njit
     def convert_od(img, normalising_c):
-        """Normalises the RGB raw values, converts to optical density."""
+        """Normalise the RGB raw values, convert to optical density."""
         return -np.log((img + 1) / normalising_c)
 
     @staticmethod
     @nb.njit(cache=True)
     def np_any_axis1(x: npt.NDArray[Any]) -> npt.NDArray[Any]:
         """Numba compatible version of np.any(x, axis=1)
-
         as in https://stackoverflow.com/questions/61304720/workaround-for-numpy-np-all-axis-argument-compatibility-with-nb
         """
         out = np.zeros(x.shape[0], dtype=np.bool8)
@@ -166,7 +160,7 @@ class Normalisation:
     @staticmethod
     @profile
     def calculate_hem(od: npt.NDArray[Any], beta: float, alpha: float) -> npt.NDArray[Any]:
-        """Calculates hematoxylin stain."""
+        """Calculate hematoxylin stain."""
         LOGGER.info("thresholding OD values")
         od_clean = od[~np.any(od < beta, axis=1)]
 
@@ -201,7 +195,7 @@ class Normalisation:
     @nb.njit
     def nb_lstsq(y: npt.NDArray[Any], he: npt.NDArray[Any],
                  s_cut: npt.NDArray[Any]) -> npt.NDArray[Any]:
-        """Calculates lstsq in batches (saturation of the stains)."""
+        """Calculate lstsq in batches (saturation of the stains)."""
         for _, batch in enumerate(np.array_split(y, 80, axis=1)):
             saturation = (
                 np.linalg.lstsq(he, batch)[0]
@@ -211,7 +205,7 @@ class Normalisation:
 
     @staticmethod
     def calculate_sp(s_cut: npt.NDArray[Any]) -> npt.NDArray[Any]:
-        """Calculates saturation percentiles."""
+        """Calculate saturation percentiles."""
         return np.array(
             [np.percentile(s_cut[0, :], 99), np.percentile(s_cut[1, :], 99)]
         )
@@ -223,7 +217,7 @@ class Normalisation:
                  max_s_ref: npt.NDArray[Any],
                  he_vals: Optional[npt.NDArray[Any]] = None,
                  ) -> Tuple[npt.NDArray[Any], npt.NDArray[Any], npt.NDArray[Any]]:
-        """Calculates saturation of region."""
+        """Calculate saturation of region."""
         LOGGER.info("od calculation")
         od = Normalisation.convert_od(
             img, normalising_c).astype(DEFAULTS["dtype"])
@@ -254,7 +248,7 @@ class Normalisation:
 
     @staticmethod
     def s_final(s_cut: npt.NDArray[Any], tmp: npt.NDArray[Any]) -> npt.NDArray[Any]:
-        """Finilising saturation normalisation."""
+        """Finish saturation normalisation."""
         LOGGER.info("final saturation normalisation")
         saturation = np.divide(
             s_cut, tmp[:, np.newaxis]).astype(DEFAULTS["dtype"])
@@ -265,7 +259,7 @@ class Normalisation:
     def image_restore(s2: npt.NDArray[Any], normalising_c: int,
                       he_ref: npt.NDArray[Any], wh: tuple,
                       output_type: str = "norm") -> npt.NDArray[Any]:
-        """Restores image to valid RGB values."""
+        """Restore image to valid RGB values."""
         width, height = wh  # for convinient np.reshape use
         LOGGER.info(f"{output_type} image generation")
         if output_type == "norm":
@@ -311,16 +305,14 @@ class Normalisation:
 
 
 class SlideTiler:
-
-    """Behaviour class for slide tiling
-
-                        ..and stitching back together.
+    """Behaviour class for slide tiling.
+        ..and stitching back together.
     """
 
     @staticmethod
     def rows_columns(slide_width_px: int, slide_height_px: int,
                      max_side_px: int) -> Tuple[int, int]:
-        """Calculates number of rows and columns
+        """Calculate number of rows and columns
         given slide size and maximum side size.
         """
         m_rows = -(slide_width_px // -max_side_px)
@@ -331,10 +323,9 @@ class SlideTiler:
     def slice_points(slide_width_px: int, slide_height_px: int,
                      mn: Tuple[int, int]) -> List[Tuple[Tuple[int, int],
                                                         Tuple[int, int]]]:
-        """Creates a list of tuples with coordinates at which the sldide is sliced
-
+        """Create a list of tuples with coordinates at which the sldide is sliced
         coordinates defined in row - column order
-        returns a list of tuples containing tuples:
+        return a list of tuples containing tuples:
                                         - location of the slice
                                         - size of the slice.
         """
@@ -359,8 +350,7 @@ class SlideTiler:
     @staticmethod
     def coordinates_dict(cutting_cooridinates: List[Tuple[Tuple[int, int], Tuple[int, int]]]
                          ) -> OrderedDict[int, Tuple[Tuple[int, int], Tuple[int, int]]]:
-        """Generates dictionary {tile index: (location, size)}
-
+        """Generate dictionary {tile index: (location, size)}
         for better estimation of the slide-specific parameters (tmp and he
         are calculated during the first run) the tile in the middle of the slide
         is normalised at first, as the first ones may not contain any information
@@ -383,7 +373,7 @@ class SlideTiler:
     def slicer(width_height_px: Tuple[int, int],
                max_side_px: int) -> Tuple[Tuple[int, int], OrderedDict[int,
                                                                        Tuple[Tuple[int, int], Tuple[int, int]]]]:
-        """Combines calculation of row/column number and slice points/sizes."""
+        """Combine calculation of row/column number and slice points/sizes."""
         width_px, height_px = width_height_px
         m_n = SlideTiler.rows_columns(width_px, height_px, max_side_px)
         slices = SlideTiler.slice_points(width_px, height_px, m_n)
@@ -415,7 +405,7 @@ class SlideTiler:
 
     @staticmethod
     def jpeg_stitcher(*args) -> None:
-        """Stitches normalised slide tiles (located in the temporary folder) together."""
+        """Stitch normalised slide tiles (located in the temporary folder) together."""
         LOGGER.info("stitching image together")
         # if libvips stitching is prefered by the user
         if DEFAULTS["vips_sticher"]:
@@ -425,7 +415,7 @@ class SlideTiler:
 
     @staticmethod
     def vips_imread(path: str) -> npt.NDArray[Any]:
-        """Wrapper for vips imare reading."""
+        """Wrap for vips imare reading."""
         img = pyvips.Image.new_from_file(path, access="sequential")
         np_img = np.ndarray(buffer=img.write_to_memory(),
                             dtype=np.uint8,
@@ -435,9 +425,8 @@ class SlideTiler:
     @staticmethod
     @profile
     def stitcher(stain_type: str, current_slide: CurrentSlide) -> None:
-        """Uses vips to read tiles, stitches them together as -numpy arrays-
-
-        works fine for 20x zoomed slides.
+        """Use vips to read tiles, stitches them together as -numpy arrays-.
+        Works fine for 20x zoomed slides.
         """
         LOGGER.info("stitching using numpy arrays")
         LOGGER.info(f"stitching slide: {current_slide.slide_path.name}")
@@ -469,7 +458,7 @@ class SlideTiler:
     def thumbnail_from_np(current_slide: CurrentSlide,
                           slide: npt.NDArray[Any],
                           stain_type: str) -> None:
-        """Creates thumbnail from a numpy array image."""
+        """Create thumbnail from a numpy array image."""
         LOGGER.info("creating normalised thumbnail")
         twidth, theight = SlideTiler.thumbnail_size(current_slide.wh)
         height, width, bands = slide.shape
@@ -483,7 +472,7 @@ class SlideTiler:
 
     @staticmethod
     def thumbnail_from_image(slide: CurrentSlide, stain_type: Optional[str] = None) -> None:
-        """Creates thumbnail from the sourde slide."""
+        """Create thumbnail from the sourde slide."""
         twidth, theight = SlideTiler.thumbnail_size(slide.wh)
         if stain_type:
             LOGGER.info(f"creating {stain_type} thumbnail")
@@ -502,7 +491,7 @@ class SlideTiler:
 
     @staticmethod
     def vips_stitcher(stain_type: str, current_slide: CurrentSlide) -> None:
-        """Uses libvips-based pyvips for stitching large slides (40x zoom)."""
+        """Use libvips-based pyvips for stitching large slides (40x zoom)."""
         LOGGER.info("stitching using vips")
         LOGGER.info(f"stitching slide: {current_slide.slide_path.name}")
         tile_paths = [Path(current_slide.temp_subpath, f"{i}_{stain_type}.jpeg")
@@ -540,8 +529,7 @@ class SlideTiler:
 
     @staticmethod
     def thumbnail_size(slide_width_height: Tuple[int, int]) -> Tuple[int, int]:
-        """Calculates size of the thumbnail
-
+        """Calculate size of the thumbnail.
         ..given max thumbnail side size and original slide size.
         """
         scale = DEFAULTS["thumbnail_max_side"] / max(slide_width_height)
@@ -549,16 +537,14 @@ class SlideTiler:
 
 
 class NormaliseSlides:
-
-    """Wrapper for user input
-
-    forwarding to the FileData
+    """Wrap for user input.
+    Forwarding to the FileData
     & further slide normalisation.
     """
 
     def __init__(self, rewrite, **kwargs) -> None:
         """
-        Creates a NormaliseSlides
+        Create a NormaliseSlides
 
         NormaliseSlides is the main interface and, first of all, forwards all of
         the provided `kwargs` to the :class:`dogsled.user_input.FileData` class
@@ -615,7 +601,7 @@ class NormaliseSlides:
         self.rewrite = rewrite
 
     def check_resources(self) -> None:
-        """Checks required resources (RAM and space)."""
+        """Check required resources (RAM and space)."""
         self.max_side_px = ResourceChecker().tile_size
         LOGGER.warning(
             f"based on the available RAM, maximum tile side size will be used: {self.max_side_px} px")
@@ -655,8 +641,7 @@ class NormaliseSlides:
 
     def repeat_stitching(self, stain_types: Union[str, List[str]] = DEFAULTS["output_type"]) -> None:
         """In case the slide tiles were processed, but the stitching caused a crash
-
-        repeats stitching only.
+        repeat stitching only.
         """
         if len(self.slide_paths) > 1:
             raise UserInputError(
@@ -670,8 +655,7 @@ class NormaliseSlides:
         LOGGER.info_regular("so far, so good")  # when everything is finisehed
 
     def cleaner(self, stain_type: str, current_slide: CurrentSlide) -> None:
-        """Removes temporary files after finished normalisation
-
+        """Remove temporary files after finished normalisation
         if detects that the normalised slide and tiles are present.
         !! does not remove the temporary folder !!
         """
@@ -690,7 +674,7 @@ class NormaliseSlides:
 
     @profile
     def process_slide(self, max_side_px: int) -> None:
-        """Wrapper for full slide processing."""
+        """Wrap for full slide processing."""
         self.slide_pre_processing(max_side_px)
         LOGGER.info_regular(
             f"normalising {self.current_slide.slide_path.name}")
@@ -727,7 +711,7 @@ class NormaliseSlides:
     def slice_normalisation(self, slice_index: int,
                             location_size: Tuple[Tuple[int, int], Tuple[int, int]],
                             single_run: bool, first_run: bool):
-        """Wrapper for slide slice processing."""
+        """Wrap for slide slice processing."""
         location, size = location_size
         img = Normalisation.read_sector(
             self.current_slide.os_slide, location, size)

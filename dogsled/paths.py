@@ -1,7 +1,6 @@
 """Path manager
-
 Checks whether the user-provided folders exist
-Creates a sub-folder system & checks if folders already exist
+Creates a sub-folder system & checks if folders already exist.
 """
 from pathlib import Path
 import logging
@@ -12,10 +11,8 @@ LOGGER = logging.getLogger(__name__)
 
 
 class PathChecker:
-
-    """Simple class for reading the user-provided path as str or Path
-
-    checks if path is correctly defined.
+    """Simple class for reading the user-provided path as str or Path.
+    Checks if path is correctly defined.
     """
 
     def __init__(self) -> None:
@@ -35,8 +32,7 @@ class PathChecker:
 
 
 class PathCreator:
-
-    """Creates path if it does not exist, rewrites it if rewrite = True"""
+    """Create path if it does not exist, rewrites it if rewrite = True."""
 
     def __init__(self) -> None:
         pass
@@ -45,7 +41,7 @@ class PathCreator:
     def create_path(path: Path,
                     child_path: Optional[Union[Path, str]] = None,
                     rewrite=False) -> None:
-        """Checks if parent path exists, creates child path in it."""
+        """Check if parent path exists, creates child path in it."""
         if child_path:
             path = Path(path, child_path)
         try:

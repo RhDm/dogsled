@@ -1,11 +1,10 @@
-"""Custom errors"""
+"""Custom errors."""
 from typing import Optional
 
 
 class UserInputError(ValueError):
 
     """Invalid user-defined constant
-
     path/slide
     name/slide
     index.
@@ -29,8 +28,7 @@ class CleaningError(Exception):
 
 
 class LibVipsError(ModuleNotFoundError):
-    """When libvips has to be downloaded for Linux/macOS
-
+    """When libvips has to be downloaded for Linux/macOS.
     ..homebrew etc.
     """
 

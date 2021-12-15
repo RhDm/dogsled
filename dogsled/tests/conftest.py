@@ -18,7 +18,7 @@ DATA_PATH = Path(Path(__file__).parent, "data")
 
 
 def md5_gen(file):
-    """Calculates md5 of a file."""
+    """Calculate md5 of a file."""
     md5_h = hashlib.md5()
     with open(file, "rb") as f:
         while True:
@@ -31,9 +31,8 @@ def md5_gen(file):
 
 @pytest.fixture(scope="session", autouse=True)
 def test_slides():
-    """Downloads slides defined in DEFAULTS (if not previously downloaded)
-
-    checks md5, if all fine- returns slide list
+    """Download slides defined in DEFAULTS (if not previously downloaded).
+    Checks md5, if all fine- returns slide list
     in DEFAULTS:    url with slides
                     slide names
                     md5 of the slides

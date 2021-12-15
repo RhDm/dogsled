@@ -1,7 +1,5 @@
-
-"""When libvips is not installed on Windows (e.g. using conda)
-
-Mostly, for Github"s actions
+"""When libvips is not installed on Windows (e.g. using conda).
+Mostly, for Github"s actions.
 """
 import shutil
 import hashlib
@@ -30,7 +28,7 @@ class GetLibvips:
 
     @staticmethod
     def md5_gen(file) -> str:
-        """Calculates md5 of a file."""
+        """Calculate md5 of a file."""
         md5_h = hashlib.md5()
         with open(file, "rb") as f:
             while True:
@@ -41,7 +39,7 @@ class GetLibvips:
         return md5_h.hexdigest()
 
     def libvips_folder(self, parent) -> Path:
-        """Creates folder where libvips will live."""
+        """Create folder where libvips will live."""
         path = Path(Path(parent).parents[1], "lib")
         try:
             path.mkdir(exist_ok=False)
@@ -51,7 +49,7 @@ class GetLibvips:
         return path
 
     def download_dlls(self) -> None:
-        """Downloads libvips .zip, unpacks, checks md5."""
+        """Download libvips .zip, unpacks, checks md5."""
         LOGGER.info(f"downloading libvips")
         url = DEFAULTS["libvips_url"]
 
@@ -74,9 +72,8 @@ class GetLibvips:
         self.libvips_zip.unlink()
 
     def pathfinder(self) -> Path:
-        """Checks for libvips folders in lib
-
-        returns the one with the latest version if several are present
+        """Check for libvips folders in lib.
+        Returns the one with the latest version if several are present
         (e.g. if re-defined in DEFAULTS and downloaded older versions).
         """
         vips_folders = [
@@ -85,9 +82,8 @@ class GetLibvips:
         return Path(vips_folders[-1])
 
     def get_path(self) -> Path:
-        """libvips path wrapper function
-
-        downloads dlls & returns their folder for registring in the PATH.
+        """libvips path wrapper function.
+        Download dlls & returns their folder for registring in the PATH.
         """
         try:
             vips_path = self.pathfinder()

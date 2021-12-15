@@ -1,5 +1,5 @@
-"""Slide manager
-Creates paquo project instance
+"""Slide manager.
+Creates paquo project instance.
 
 TODO probably should remove the whole module
 """
@@ -22,10 +22,8 @@ path_checker = PathChecker()
 
 @dataclass
 class CurrentSlide:
-
-    """Class for holding data on the current slide processed
-
-    to be shared between functions and classes for convinient slide info managing.
+    """Class for holding data on the current slide processed.
+    To be shared between functions and classes for convinient slide info managing.
     """
 
     # source slide path
@@ -47,10 +45,8 @@ class CurrentSlide:
 
 
 class QuPathSlides:
-
-    """Accepts .qpproj path
-
-    passes it to paquo, returns paquo project class instance.
+    """Accepts .qpproj path.
+    Passes it to paquo, returns paquo project class instance.
     """
 
     def __init__(self,

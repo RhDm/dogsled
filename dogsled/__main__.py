@@ -2,9 +2,8 @@
 
 
 def main():  # pragma: no cover
-    """Starter function
-
-    currently, not implemented
+    """Starter function.
+    Currently, not implemented
     """
     pass
 

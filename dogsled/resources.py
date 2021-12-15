@@ -12,7 +12,6 @@ LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class ResourceInfo:
-
     """Simple class for holding the resource data."""
 
     reource_name: str
@@ -21,7 +20,6 @@ class ResourceInfo:
 
 
 class ResourceEstimator:
-
     """Class for estimation of the resources (available space and RAM)."""
 
     def __init__(self,
@@ -31,8 +29,7 @@ class ResourceEstimator:
 
     def space_estimator(self,
                         slide_paths) -> int:
-        """Estimates the size of th normalised jpeg file
-
+        """Estimate the size of th normalised jpeg file
         ..given svs size, uses simple linear regression based on data on 56 normalised slides.
         """
         svs_file_sizes = [slide.stat().st_size for slide in slide_paths]
@@ -42,14 +39,12 @@ class ResourceEstimator:
         return total_required
 
     def mapping_equation(self, svs_size: int) -> int:
-        """Mapping of svs to jpeg."""
+        """Map of svs to jpeg."""
         return int(-2.28 + 1.51 * svs_size)
 
 
 class ResourceChecker:
-
-    """Checks how much RAM is available
-
+    """Check how much RAM is available.
     => tile side size estimation
     .. and how much space is present/required using ResourceEstimator.
     """
@@ -59,7 +54,7 @@ class ResourceChecker:
 
     @property
     def tile_size(self) -> int:
-        """Uses RAM size to map to the tile size."""
+        """Use RAM size to map to the tile size."""
         available_mb = psutil.virtual_memory().available >> 20
         closest_mb = min(DEFAULTS["ram_megapixel"].keys(),
                          key=lambda x: abs(x - available_mb))
@@ -68,7 +63,7 @@ class ResourceChecker:
 
     @staticmethod
     def space(slide_paths: List[Path], norm_path: Path) -> Tuple[int, Optional[int], bool]:
-        """Calculates required space for normalisation of the slides selected."""
+        """Calculate required space for normalisation of the slides selected."""
         free_space = psutil.disk_usage(str(norm_path)).free >> 20
         space_required = None
         # if any(True for path in slide_paths if path.suffix != ".svs"):

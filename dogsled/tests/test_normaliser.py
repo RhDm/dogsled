@@ -15,7 +15,6 @@ from dogsled.errors import LibVipsError
 # ugly, but works for windows
 if platform.system() == "Windows":
     """If pyvips could nor be imported & Windows is used
-
     => download libvips, register DLLs
     """
     vips_getter = GetLibvips()
@@ -48,9 +47,8 @@ except FileExistsError:
 
 @pytest.fixture(scope="module", autouse=True)
 def test_data(test_slides):
-    """Moves all test data
-
-    data located at the folder with the same name
+    """Move all test data.
+    Data located at the folder with the same name
     as the test file to the data folder, re-defines DATA_PATH.
     """
     module_name = Path(__file__).stem
@@ -182,7 +180,6 @@ def slices(small_test_data):
 
 def test_rows_columns():
     """If the maximum tile side size is 900 and the slide size is 2780
-
     => has to split in 4 rows/columns.
     """
     mn = SlideTiler.rows_columns(slide_width_px=2780,
@@ -193,7 +190,6 @@ def test_rows_columns():
 
 def test_slice_points(slice_points):
     """If the slide size is 3451x7463 px and mn = 4x3
-
     =>  ((0,0) (1150,1865)) etc.
     """
     result = SlideTiler.slice_points(slide_width_px=3451,
@@ -214,7 +210,6 @@ def test_slicer(slices):
 
 def test_thumbnail_size():
     """If the slide size is 577392x464930 & max thumbnail size is 1200
-
     => 0.01039155374*577392 x 0.01039155374*464930
     => 6000x4831
     """
