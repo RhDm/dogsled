@@ -1,6 +1,6 @@
 
-"""
-when libvips is not installed on Windows (e.g. using conda)
+"""When libvips is not installed on Windows (e.g. using conda)
+
 Mostly, for Github"s actions
 """
 import shutil
@@ -17,6 +17,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class GetLibvips:
+
     """Class for creating the folders, downloading, unzipping.."""
 
     def __init__(self, parent: str = "."):
@@ -74,6 +75,7 @@ class GetLibvips:
 
     def pathfinder(self) -> Path:
         """Checks for libvips folders in lib
+
         returns the one with the latest version if several are present
         (e.g. if re-defined in DEFAULTS and downloaded older versions).
         """
@@ -83,8 +85,9 @@ class GetLibvips:
         return Path(vips_folders[-1])
 
     def get_path(self) -> Path:
-        """Wrapper function
-        which downloads dlls & returns their folder for registring in the PATH.
+        """libvips path wrapper function
+
+        downloads dlls & returns their folder for registring in the PATH.
         """
         try:
             vips_path = self.pathfinder()

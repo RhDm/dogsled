@@ -1,12 +1,8 @@
-"""
-dogsled
-
-"""
+"""dogsled"""
 
 
 def main():  # pragma: no cover
-    """
-    Starter function
+    """Starter function
 
     currently, not implemented
     """

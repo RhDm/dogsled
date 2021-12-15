@@ -1,6 +1,4 @@
-"""
-(currently) logging configuration
-"""
+"""(currently) logging configuration."""
 # TODO implement enum to hold constants and default parameters such as temp folder name, he_ref etc
 from dynaconf import Dynaconf
 

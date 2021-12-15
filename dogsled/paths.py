@@ -1,6 +1,4 @@
-"""
-
-Path manager
+"""Path manager
 
 Checks whether the user-provided folders exist
 Creates a sub-folder system & checks if folders already exist
@@ -14,8 +12,10 @@ LOGGER = logging.getLogger(__name__)
 
 
 class PathChecker:
+
     """Simple class for reading the user-provided path as str or Path
-    & checking if path is correctly defined.
+
+    checks if path is correctly defined.
     """
 
     def __init__(self) -> None:
@@ -35,6 +35,7 @@ class PathChecker:
 
 
 class PathCreator:
+
     """Creates path if it does not exist, rewrites it if rewrite = True"""
 
     def __init__(self) -> None:

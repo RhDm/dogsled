@@ -22,13 +22,13 @@ if wish to test `dogsled` and need the data, feel free to drop me an email at: d
 ## Quirks and features
 
 Currently, `dogsled` can:
-  - normalise all slides located in a specified folder
-  - normalise slides specified by name
-  - normalise slides defined in a QuPath library (either all or the ones specified by name and/or index)
-  - generate JPEG equivalents of the normalised slides
-  - generate TIFF equivalents of the normalised slides (also for large slides not fitting in RAM)
-  - create hematoxylin/eosin decoupled normalised images
-  - create thumbnails of all slides (pre-normalised and normalised)
+-   normalise all slides located in a specified folder
+-   normalise slides specified by name
+-   normalise slides defined in a QuPath library (either all or the ones specified by name and/or index)
+-   generate JPEG equivalents of the normalised slides
+-   generate TIFF equivalents of the normalised slides (also for large slides not fitting in RAM)
+-   create hematoxylin/eosin decoupled normalised images
+-   create thumbnails of all slides (pre-normalised and normalised)
 
 ## Documentation
 `dogsled` about page, quickstart, installation and API can be found at [dogsled.readthedocs.io](https://dogsled.readthedocs.io)

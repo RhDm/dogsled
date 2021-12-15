@@ -31,7 +31,8 @@ def md5_gen(file):
 
 @pytest.fixture(scope="session", autouse=True)
 def test_slides():
-    """downloads slides defined in DEFAULTS (if not previously downloaded)
+    """Downloads slides defined in DEFAULTS (if not previously downloaded)
+
     checks md5, if all fine- returns slide list
     in DEFAULTS:    url with slides
                     slide names

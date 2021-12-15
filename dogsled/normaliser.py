@@ -1,6 +1,4 @@
-"""
-Normaliser
-"""
+"""Normaliser"""
 import os
 import platform
 import logging
@@ -31,6 +29,7 @@ NB_DTYPE = DEFAULTS["numba_dtype"]
 # ugly, but works for windows
 if platform.system() == "Windows":
     """If pyvips could nor be imported & Windows is used
+
     => download libvips, register DLLs.
     """
     vips_getter = GetLibvips()
@@ -64,7 +63,9 @@ if "line_profiler" not in dir() and "profile" not in dir():
 
 
 class ProcessLogger:
+
     """Class for user-friendly logging:
+
             regular logging with newlines in terminal
             logging with clearing previous output in Jupyter.
     """
@@ -103,8 +104,8 @@ class ProcessLogger:
 
     def info(self, message: str):
         """Main status logger
-        format:
-                Slide 1/12 SlideName.svs tile 1/12 operation_name.
+
+        format: Slide 1/12 SlideName.svs tile 1/12 operation_name.
         """
         if not self.slide_name:  # for testing runs or status logging outside of normalisation
             self.info_regular(message)
@@ -126,7 +127,9 @@ LOGGER = ProcessLogger(LOGGER)
 
 
 class Normalisation:
+
     """All heavylifting is defined here."""
+
     @staticmethod
     @profile
     def read_sector(slide: pyvips.vimage.Image, location: Tuple[int, int],
@@ -152,6 +155,7 @@ class Normalisation:
     @nb.njit(cache=True)
     def np_any_axis1(x: npt.NDArray[Any]) -> npt.NDArray[Any]:
         """Numba compatible version of np.any(x, axis=1)
+
         as in https://stackoverflow.com/questions/61304720/workaround-for-numpy-np-all-axis-argument-compatibility-with-nb
         """
         out = np.zeros(x.shape[0], dtype=np.bool8)
@@ -307,7 +311,9 @@ class Normalisation:
 
 
 class SlideTiler:
+
     """Behaviour class for slide tiling
+
                         ..and stitching back together.
     """
 
@@ -326,6 +332,7 @@ class SlideTiler:
                      mn: Tuple[int, int]) -> List[Tuple[Tuple[int, int],
                                                         Tuple[int, int]]]:
         """Creates a list of tuples with coordinates at which the sldide is sliced
+
         coordinates defined in row - column order
         returns a list of tuples containing tuples:
                                         - location of the slice
@@ -408,9 +415,7 @@ class SlideTiler:
 
     @staticmethod
     def jpeg_stitcher(*args) -> None:
-        """Stitches normalised slide tiles
-        (located in the temporary folder) together.
-        """
+        """Stitches normalised slide tiles (located in the temporary folder) together."""
         LOGGER.info("stitching image together")
         # if libvips stitching is prefered by the user
         if DEFAULTS["vips_sticher"]:
@@ -420,7 +425,7 @@ class SlideTiler:
 
     @staticmethod
     def vips_imread(path: str) -> npt.NDArray[Any]:
-        """rapper for vips imare reading"""
+        """Wrapper for vips imare reading."""
         img = pyvips.Image.new_from_file(path, access="sequential")
         np_img = np.ndarray(buffer=img.write_to_memory(),
                             dtype=np.uint8,
@@ -431,6 +436,7 @@ class SlideTiler:
     @profile
     def stitcher(stain_type: str, current_slide: CurrentSlide) -> None:
         """Uses vips to read tiles, stitches them together as -numpy arrays-
+
         works fine for 20x zoomed slides.
         """
         LOGGER.info("stitching using numpy arrays")
@@ -496,9 +502,7 @@ class SlideTiler:
 
     @staticmethod
     def vips_stitcher(stain_type: str, current_slide: CurrentSlide) -> None:
-        """Uses libvips-based pyvips for stitching if installed
-        more efficient and works with large slides (40x zoom).
-        """
+        """Uses libvips-based pyvips for stitching large slides (40x zoom)."""
         LOGGER.info("stitching using vips")
         LOGGER.info(f"stitching slide: {current_slide.slide_path.name}")
         tile_paths = [Path(current_slide.temp_subpath, f"{i}_{stain_type}.jpeg")
@@ -536,15 +540,19 @@ class SlideTiler:
 
     @staticmethod
     def thumbnail_size(slide_width_height: Tuple[int, int]) -> Tuple[int, int]:
-        """Calculates size of the thumbnail given max thumbnail side size and
-        original slide size.
+        """Calculates size of the thumbnail
+
+        ..given max thumbnail side size and original slide size.
         """
         scale = DEFAULTS["thumbnail_max_side"] / max(slide_width_height)
         return int(scale * slide_width_height[0]), int(scale * slide_width_height[1])
 
 
 class NormaliseSlides:
-    """Wrapper for user input forwarding to the FileData
+
+    """Wrapper for user input
+
+    forwarding to the FileData
     & further slide normalisation.
     """
 
@@ -646,8 +654,9 @@ class NormaliseSlides:
         LOGGER.total_tiles(self.current_slide.tile_map)
 
     def repeat_stitching(self, stain_types: Union[str, List[str]] = DEFAULTS["output_type"]) -> None:
-        """In case the slide tiles were processed, but the stitching caused
-        a crash repeats stitching only.
+        """In case the slide tiles were processed, but the stitching caused a crash
+
+        repeats stitching only.
         """
         if len(self.slide_paths) > 1:
             raise UserInputError(
@@ -662,6 +671,7 @@ class NormaliseSlides:
 
     def cleaner(self, stain_type: str, current_slide: CurrentSlide) -> None:
         """Removes temporary files after finished normalisation
+
         if detects that the normalised slide and tiles are present.
         !! does not remove the temporary folder !!
         """

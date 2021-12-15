@@ -1,7 +1,4 @@
-"""
-Currently, only logging lives here
-
-"""
+"""Currently, only logging lives here."""
 
 import logging
 import logging.config

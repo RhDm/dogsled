@@ -1,5 +1,4 @@
-"""
-default constants are stored here
+"""Default constants are stored here
 
 vips tiff compression options:
 https://libvips.github.io/pyvips/enums.html#pyvips.enums.ForeignTiffCompression

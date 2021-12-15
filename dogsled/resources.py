@@ -1,6 +1,4 @@
-"""
-All reaource estimators live here.
-"""
+"""All reaource estimators live here."""
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Tuple
@@ -14,13 +12,16 @@ LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class ResourceInfo:
+
     """Simple class for holding the resource data."""
+
     reource_name: str
     resource_required: int
     resource_available: int
 
 
 class ResourceEstimator:
+
     """Class for estimation of the resources (available space and RAM)."""
 
     def __init__(self,
@@ -30,8 +31,9 @@ class ResourceEstimator:
 
     def space_estimator(self,
                         slide_paths) -> int:
-        """Estimates the size of th normalised jpeg file given svs size
-        uses simple linear regression based on data on 56 normalised slides.
+        """Estimates the size of th normalised jpeg file
+
+        ..given svs size, uses simple linear regression based on data on 56 normalised slides.
         """
         svs_file_sizes = [slide.stat().st_size for slide in slide_paths]
         jpeg_file_sizes = [self.mapping_equation(slide.stat().st_size)
@@ -45,7 +47,9 @@ class ResourceEstimator:
 
 
 class ResourceChecker:
+
     """Checks how much RAM is available
+
     => tile side size estimation
     .. and how much space is present/required using ResourceEstimator.
     """
