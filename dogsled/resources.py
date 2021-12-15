@@ -69,7 +69,7 @@ class ResourceChecker:
     @staticmethod
     def space(slide_paths: List[Path], norm_path: Path) -> Tuple[int, Optional[int], bool]:
         '''calculates required space for normalisation of the slides selected'''
-        free_space = psutil.disk_usage(norm_path).free >> 20
+        free_space = psutil.disk_usage(str(norm_path)).free >> 20
         space_required = None
         # if any(True for path in slide_paths if path.suffix != '.svs'):
         #     # calculate only if all slides are .svs

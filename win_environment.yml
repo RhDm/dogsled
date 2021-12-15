@@ -18,6 +18,7 @@ dependencies:
   - dynaconf
   - pytest>=6
   - pytest-cov=3.0.*
+  - urllib3
   - pip:
     - pyvips==2.1.16
     - paquo

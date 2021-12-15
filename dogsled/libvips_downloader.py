@@ -9,7 +9,6 @@ import urllib.request
 import zipfile
 import logging
 from pathlib import Path
-from typing import Optional
 
 from dogsled.defaults import DEFAULTS
 from dogsled.errors import LibVipsError
@@ -23,7 +22,10 @@ class GetLibvips:
     '''
 
     def __init__(self, parent: str = '.'):
-        self.libvips_home = self.libvips_folder(parent)
+        if parent == '.':
+            self.libvips_home = self.libvips_folder(__file__)
+        else:
+            self.libvips_home = self.libvips_folder(parent)
         self.libvips_zip = Path(self.libvips_home,
                                 'vips-dev-w64-web-x.xx.x-static.zip')
 
@@ -41,7 +43,7 @@ class GetLibvips:
 
     def libvips_folder(self, parent) -> Path:
         '''creates folder where libvips will live'''
-        path = Path(parent, 'lib')
+        path = Path(Path(parent).parents[1], 'lib')
         try:
             path.mkdir(exist_ok=False)
         except FileExistsError:
@@ -56,7 +58,7 @@ class GetLibvips:
 
         with urllib.request.urlopen(url) as response, open(self.libvips_zip, 'wb') as out_file:
             shutil.copyfileobj(response, out_file)
-        LOGGER.info(GetLibvips.md5_gen(self.libvips_zip))
+        # LOGGER.info(GetLibvips.md5_gen(self.libvips_zip))
 
         if GetLibvips.md5_gen(self.libvips_zip) != DEFAULTS['libvips_md5']:
             LOGGER.error(

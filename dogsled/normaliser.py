@@ -434,7 +434,6 @@ class SlideTiler:
     #     Normalisation.save_jpeg(Path(current_slide.norm_path, current_slide.slide_path.stem),
     #                             image_stitched)
 
-
     @staticmethod
     def jpeg_stitcher(*args) -> None:
         '''
@@ -539,15 +538,20 @@ class SlideTiler:
         normalised_slide = pyvips.Image.arrayjoin(tiles,
                                                   across=current_slide.mn[1])
         # TODO check for size limit 65535
-        mpp_x = current_slide.os_slide.get('openslide.mpp-x')
-        # mpp_y = current_slide.os_slide.properties['openslide.mpp-y'] # used for Aperio metadata
-        magnification = current_slide.os_slide.get('openslide.objective-power')
-        # currently spoofs Aperio metadata ( Magnification in OME Schema is not recognised by QuPath..)
-        normalised_slide.set_type(pyvips.GValue.gstr_type,
-                                  'image-description',
-                                  f'''Aperio Image Library v12.4.0 {normalised_slide.width}x{normalised_slide.height}] | AppMag = {magnification}| MPP={mpp_x}
-            ''',
-                                  )
+        if platform.system() != 'Windows':
+            # not implemented for Windows
+            # vips-dev-w64-all-X.XX.X.zip hangs
+            # vips-dev-w64-web-8.12.0-static.zip cent read metadata
+            mpp_x = current_slide.os_slide.get('openslide.mpp-x')
+            # mpp_y = current_slide.os_slide.properties['openslide.mpp-y'] # used for Aperio metadata
+            magnification = current_slide.os_slide.get(
+                'openslide.objective-power')
+            # currently spoofs Aperio metadata ( Magnification in OME Schema is not recognised by QuPath..)
+            normalised_slide.set_type(pyvips.GValue.gstr_type,
+                                      'image-description',
+                                      f'''Aperio Image Library v12.4.0 {normalised_slide.width}x{normalised_slide.height}] | AppMag = {magnification}| MPP={mpp_x}
+                ''',
+                                      )
         # writes a binary file
         normalised_slide.tiffsave(str(Path(current_slide.norm_path,
                                            f'{stain_type}_{current_slide.slide_path.stem}.tif')),
