@@ -196,7 +196,7 @@ class Normalisation:
     def nb_lstsq(y: npt.NDArray[Any], he: npt.NDArray[Any],
                  s_cut: npt.NDArray[Any]) -> npt.NDArray[Any]:
         """Calculate lstsq in batches (saturation of the stains)."""
-        for _, batch in enumerate(np.array_split(y, 80, axis=1)):
+        for _, batch in enumerate(np.array_split(y, 2, axis=1)):
             saturation = (
                 np.linalg.lstsq(he, batch)[0]
             ).astype(NB_DTYPE)

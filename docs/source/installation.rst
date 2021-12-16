@@ -26,10 +26,13 @@ This method installs autocamically all dependencies including `libvips <https://
 Via pip
 '''''''''''''''''''''''''''''''''''''
 
-dogsled can be installed also via pip:
+dogsled can be installed also via pip (be sure to have Python 3.9 on your system and create a separate environment using, for example, `virtuelenv <https://virtualenv.pypa.io/en/latest/index.html/>`_):
 
 .. code-block:: console
 
+    user@arch:~$ pip install virtualenv
+    user@arch:~$ virtualenv /PATH/WHERE/PYTHON/ENV/WILL/LIVE --python=python3.9
+    user@arch:~$ source /PATH/WHERE/PYTHON/ENV/WILL/LIVE/bin/activate
     user@arch:~$ pip install dogsled
 
 This, however, will not install libvips on Linux and macOS, please follow the `installation guides <https://www.libvips.org/install.html/>`_.
