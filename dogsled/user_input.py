@@ -224,7 +224,7 @@ class FileData:
             temp_path = path_checker.str_to_path(temp_path)
         else:
             temp_path = Path(path_holder.norm_slide_path,
-                             DEFAULTS["temporary_folder_name"],)
+                             DEFAULTS.temporary_folder_name,)
         path_creator.create_path(temp_path, rewrite=rewrite_flag)
         path_holder.temp_path = temp_path
 

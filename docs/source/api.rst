@@ -91,13 +91,13 @@ If the last logged event states the name of the stitched slide or the status of 
 
 
 
-The :py:attr:`DEFAULTS` dictionary
+The :py:attr:`DEFAULTS_VALS` dictionary
 =====================================
 
 
 .. code-block:: python
 
-    dogsled.defaults.DEFAULTS
+    dogsled.defaults.DEFAULTS_VALS
 
 This dictionary holds constants used for normalisation and some other normalisation parameters.
 
@@ -129,15 +129,17 @@ This dictionary holds constants used for normalisation and some other normalisat
                 'max_s_ref': array([0.498, 0.927])}
 
 
-All of the parameters may be re-defined by the user prior :class:`NormaliseSlides` initialisation:
+This dictionary is internally processed and forwarded to the :class:`Defaults` which holds all parameters and can be used for parameter re-definition by the user prior :class:`NormaliseSlides` initialisation (using :py:attr:`DEFAULTS` instance of :class:`Defaults`). If you wish to obtain hemotoxylin and eosin stains in addition to the default normalised slide, it can be done via :class:`StainTypes` class:
 
 .. code-block:: python
 
     from dogsled.normaliser import NormaliseSlides
-    from dogsled.defaults import DEFAULTS
+    from dogsled.defaults import DEFAULTS, StainTypes
 
-    DEFAULTS['output_type'] = ['norm', 'he', 'eo']
-    DEFAULTS['vips_stitcher'] = True
+    # if you want norm stain + he and eo
+    DEFAULTS.output_type = [StainTypes.norm, StainTypes.he, StainTypes.eo]
+    DEFAULTS.vips_stitcher = True
+    DEFAULTS.vips_tiff_compression = 'deflate'
 
     normaliser = NormaliseSlides(source_path = '/Users/uname/slides/',
                                  qpproj_path = '/Users/uname/QuPath_projects/project.qpproj',
@@ -161,11 +163,11 @@ All of the parameters may be re-defined by the user prior :class:`NormaliseSlide
 
     As the Macenko normalisation gives access to the stain-decoupling, dogsled can
     generate the hematoxylin and eosin images in addition to the normalised image. If
-    these images are needed, they can be specified using :py:attr:`['he', 'eo']` list.
-    E.g. for all three, specify :py:attr:`['norm', 'he', 'eo']`
+    these images are needed, they can be specified using attributes of the :class:`StainTypes` class.
+    E.g. :py:attr:`[StainTypes.he, StainTypes.eo]`. For all three, specify :py:attr:`[StainTypes.norm, StainTypes.he, StainTypes.eo]]`
 
-    :type: list[string]
-    :default: :py:attr:`['norm']`
+    :type: list[<enum 'StainTypes'>]
+    :default: :py:attr:`[StainTypes.norm]`
 
 .. confval:: dtype
 

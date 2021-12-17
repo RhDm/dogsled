@@ -10,6 +10,7 @@ import pytest
 
 from dogsled.libvips_downloader import GetLibvips
 from dogsled.errors import LibVipsError
+from dogsled.defaults import StainTypes
 
 #### pyvips import block ####
 # ugly, but works for windows
@@ -36,7 +37,7 @@ logger = logging.getLogger(__name__)
 
 DATA_PATH = Path(Path(__file__).parent, "data")
 NORM_PATH = Path(DATA_PATH, "normalised")
-DEFAULTS["output_type"] = ["norm", "he", "eo"]
+DEFAULTS.output_type = [StainTypes.he, StainTypes.eo, StainTypes.norm]
 
 # try creating a testing data folder if it does not exist already
 try:
@@ -117,19 +118,19 @@ def test_normalisation(slice_sector_ref, slice_od_ref, slice_he_ref,
         str(Path(DATA_PATH, "CMU-1-Small-Region.svs")), access="sequential")
     cutout = Normalisation.read_sector(
         slide, location=(550, 550), size_wh=(1110, 1110))
-    od = Normalisation.convert_od(cutout, DEFAULTS["normalising_c"])
-    he = Normalisation.calculate_hem(od, DEFAULTS["beta"], DEFAULTS["alpha"])
+    od = Normalisation.convert_od(cutout, DEFAULTS.normalising_c)
+    he = Normalisation.calculate_hem(od, DEFAULTS.beta, DEFAULTS.alpha)
     y = np.reshape(od, (-1, 3)).T
-    s_cut = np.empty(shape=[2, 0], dtype=DEFAULTS["dtype"])
+    s_cut = np.empty(shape=[2, 0], dtype=DEFAULTS.dtype)
     s_cut = Normalisation.nb_lstsq(y, he, s_cut)
     max_s = Normalisation.calculate_sp(s_cut)
     wrapper_s_cut, wrapper_tmp, wrapper_he = Normalisation.region_s(
-        cutout, DEFAULTS["normalising_c"],
-        DEFAULTS["alpha"], DEFAULTS["beta"],
-        DEFAULTS["max_s_ref"], DEFAULTS["he_ref"])
+        cutout, DEFAULTS.normalising_c,
+        DEFAULTS.alpha, DEFAULTS.beta,
+        DEFAULTS.max_s_ref, DEFAULTS.he_ref)
     c2 = Normalisation.s_final(wrapper_s_cut, wrapper_tmp)
-    img = Normalisation.image_restore(c2, DEFAULTS["normalising_c"],
-                                      DEFAULTS["he_ref"], (1110, 1110),
+    img = Normalisation.image_restore(c2, DEFAULTS.normalising_c,
+                                      DEFAULTS.he_ref, (1110, 1110),
                                       output_type="norm")
     res = img.shape[0]*img.shape[1]*3
 
@@ -265,29 +266,29 @@ def test_full_small_svs(small_slide_ref, test_slides):
 
 def test_full_big_svs():
     """Make dogsled treat small slide as a big slide."""
-    DEFAULTS["ram_megapixel"] = {8000: 1500, 8001: 1500}
+    DEFAULTS.ram_megapixel = {8000: 1500, 8001: 1500}
     # disable removing temporary files
-    DEFAULTS["remove_temporary_files"] = False
+    DEFAULTS.remove_temporary_files = False
     normaliser = NormaliseSlides(source_path=DATA_PATH,
                                  slide_names="CMU-1-Small-Region.svs",
                                  norm_path=Path(DATA_PATH, "normalised"),
                                  rewrite=True)
     normaliser.start()
     temp_folder = Path(
-        NORM_PATH, DEFAULTS["temporary_folder_name"], "CMU-1-Small-Region")
+        NORM_PATH, DEFAULTS.temporary_folder_name, "CMU-1-Small-Region")
     # check if the temporary folder was not cleaned
     assert next((file for file in temp_folder.iterdir()
                 if not str(file.name).startswith(".")), False)
     # check if the repeated stitching works
     normaliser.repeat_stitching()
     # clean temporary folder
-    for stain_type in DEFAULTS["output_type"]:
+    for stain_type in DEFAULTS.stain_types():
         normaliser.cleaner(stain_type, normaliser.current_slide)
     # check if the temporary folder was cleaned, excluding hidden files
     assert not next((file for file in temp_folder.iterdir()
                     if not str(file.name).startswith(".")), False)
     # restore the values for further tests
-    DEFAULTS["ram_megapixel"] = {8000: 12000, 8001: 24500}
+    DEFAULTS.ram_megapixel = {8000: 12000, 8001: 24500}
 
 
 @pytest.fixture(scope="function")
@@ -303,22 +304,22 @@ def small_slide_ref_vips_tiff():
 
 def test_vips_stitching(small_slide_ref_vips_tiff):
     """Make dogsled treat small slide as a big slide and use vips stitcher."""
-    DEFAULTS["vips_stitcher"] = True
-    DEFAULTS["ram_megapixel"] = {8000: 1500, 8001: 1500}
+    DEFAULTS.vips_stitcher = True
+    DEFAULTS.ram_megapixel = {8000: 1500, 8001: 1500}
     normaliser = NormaliseSlides(source_path=DATA_PATH,
                                  slide_names="CMU-1-Small-Region.svs",
                                  norm_path=NORM_PATH,
                                  rewrite=True)
     normaliser.start()
     temp_folder = Path(
-        NORM_PATH, DEFAULTS["temporary_folder_name"], "CMU-1-Small-Region")
+        NORM_PATH, DEFAULTS.temporary_folder_name, "CMU-1-Small-Region")
     # check if the temporary folder was not cleaned
     assert next((file for file in temp_folder.iterdir()
                 if not str(file.name).startswith(".")), False)
     # check if the repeated stitching works
     normaliser.repeat_stitching()
     # clean temporary folder
-    for stain_type in DEFAULTS["output_type"]:
+    for stain_type in DEFAULTS.stain_types():
         normaliser.cleaner(stain_type, normaliser.current_slide)
     # check if the temporary folder was cleaned, excluding hidden files
     assert not next((file for file in temp_folder.iterdir()
@@ -340,4 +341,4 @@ def test_vips_stitching(small_slide_ref_vips_tiff):
     # allow for 1% of mismatched pixels
     assert (np.count_nonzero(ref_eo != tif_eo)/res)*100 < 1
     # restore default values for further tests
-    DEFAULTS["ram_megapixel"] = {8000: 12000, 8001: 24500}
+    DEFAULTS.ram_megapixel = {8000: 12000, 8001: 24500}

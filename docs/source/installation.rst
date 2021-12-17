@@ -38,9 +38,7 @@ dogsled can be installed also via pip (be sure to have Python 3.9 on your system
 This, however, will not install libvips on Linux and macOS, please follow the `installation guides <https://www.libvips.org/install.html/>`_.
 
 
-`QuPath <https://qupath.github.io/>`_ installation is also required if you plan to normalise
-slides of the QuPath projects. In that case, dogsled will use Bayer's excellent :py:mod:`paquo` library
-for interactions with QuPath files (installed automatically together with dogsled).
+As dogsled uses Bayer's :py:mod:`paquo` library for interactions with QuPath files, `QuPath <https://qupath.github.io/>`_ installation is also required if you install dogsled via pip (QuPath is automatically installed if Conda is used)
 
 
 In case you plan to work with large slides (over 100,000pixels per side), or if your system can not handle

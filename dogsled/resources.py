@@ -57,9 +57,9 @@ class ResourceChecker:
     def tile_size(self) -> int:
         """Use RAM size to map to the tile size."""
         available_mb = psutil.virtual_memory().available >> 20
-        closest_mb = min(DEFAULTS["ram_megapixel"].keys(),
+        closest_mb = min(DEFAULTS.ram_megapixel.keys(),
                          key=lambda x: abs(x - available_mb))
-        self._mpx = DEFAULTS["ram_megapixel"][closest_mb]
+        self._mpx = DEFAULTS.ram_megapixel[closest_mb]
         return self._mpx
 
     @staticmethod

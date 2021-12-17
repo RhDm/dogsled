@@ -45,7 +45,7 @@ def test_file_data_qupath_svs(norm_path, test_slides_names, test_slides_i, qupat
     assert fd.path_info.source_path == None
     assert fd.path_info.qpproj_path == qupath_project.path
     assert fd.path_info.temp_path == Path(
-        norm_path, DEFAULTS["temporary_folder_name"])
+        norm_path, DEFAULTS.temporary_folder_name)
 
     assert fd.slide_info.to_process_i == test_slides_i
     if platform.system() != "Windows":
@@ -68,7 +68,7 @@ def test_file_data_qupath(norm_path, test_slides_names, test_slides_i, qupath_pr
     assert fd.path_info.norm_slide_path == norm_path
     assert fd.path_info.qpproj_path == qupath_project.path
     assert fd.path_info.temp_path == Path(
-        norm_path, DEFAULTS["temporary_folder_name"])
+        norm_path, DEFAULTS.temporary_folder_name)
 
     assert fd.slide_info.indexes == test_slides_i
     assert fd.slide_info.to_process_i == test_slides_i
@@ -93,7 +93,7 @@ def test_file_data_svs(norm_path, test_slides_names, test_slides_i, test_slides)
     assert fd.path_info.norm_slide_path == norm_path
     assert fd.path_info.qpproj_path == None
     assert fd.path_info.temp_path == Path(
-        norm_path, DEFAULTS["temporary_folder_name"])
+        norm_path, DEFAULTS.temporary_folder_name)
 
     assert fd.slide_info.to_process_i == test_slides_i
     assert fd.slide_info.to_process_paths.sort() == sorted_test_slides

@@ -22,7 +22,7 @@ from dogsled.libvips_downloader import GetLibvips
 LOGGER = logging.getLogger(__name__)
 # not setting the leven in config.py to filter vips etc messages
 LOGGER.setLevel(logging.DEBUG)
-NB_DTYPE = DEFAULTS["numba_dtype"]
+NB_DTYPE = DEFAULTS.numba_dtype
 
 
 #### pyvips import block ####
@@ -146,22 +146,23 @@ class Normalisation:
         """Normalise the RGB raw values, convert to optical density."""
         return -np.log((img + 1) / normalising_c)
 
-    @staticmethod
-    @nb.njit(cache=True)
-    def np_any_axis1(x: npt.NDArray[Any]) -> npt.NDArray[Any]:
-        """Numba compatible version of np.any(x, axis=1)
-        as in https://stackoverflow.com/questions/61304720/workaround-for-numpy-np-all-axis-argument-compatibility-with-nb
-        """
-        out = np.zeros(x.shape[0], dtype=np.bool8)
-        for i in range(x.shape[1]):
-            out = np.logical_or(out, x[:, i])
-        return out
+    # @staticmethod
+    # @nb.njit(cache=True)
+    # def np_any_axis1(x: npt.NDArray[Any]) -> npt.NDArray[Any]:
+    #     """Numba compatible version of np.any(x, axis=1)
+    #     as in https://stackoverflow.com/questions/61304720/workaround-for-numpy-np-all-axis-argument-compatibility-with-nb
+    #     """
+    #     out = np.zeros(x.shape[0], dtype=np.bool8)
+    #     for i in range(x.shape[1]):
+    #         out = np.logical_or(out, x[:, i])
+    #     return out
 
     @staticmethod
     @profile
     def calculate_hem(od: npt.NDArray[Any], beta: float, alpha: float) -> npt.NDArray[Any]:
         """Calculate hematoxylin stain."""
         LOGGER.info("thresholding OD values")
+        # od_clean = od[~Normalisation.np_any_axis1(np.less(od, beta))]
         od_clean = od[~np.any(od < beta, axis=1)]
 
         LOGGER.info("calculating eigenvectors & eigenvalues")
@@ -169,7 +170,7 @@ class Normalisation:
 
         # eigenvectors are returned in ascending order, largest two are used
         LOGGER.info("projecting OD values onto the plane")
-        projection = od_clean.dot(eigenvecs[:, 1:3].astype(DEFAULTS["dtype"]))
+        projection = od_clean.dot(eigenvecs[:, 1:3].astype(DEFAULTS.dtype))
 
         LOGGER.info("calculation angles of the points")
         angs = np.arctan2(projection[:, 1], projection[:, 0])
@@ -196,7 +197,7 @@ class Normalisation:
     def nb_lstsq(y: npt.NDArray[Any], he: npt.NDArray[Any],
                  s_cut: npt.NDArray[Any]) -> npt.NDArray[Any]:
         """Calculate lstsq in batches (saturation of the stains)."""
-        for _, batch in enumerate(np.array_split(y, 10, axis=1)):
+        for batch in np.array_split(y, 10, axis=1):
             saturation = (
                 np.linalg.lstsq(he, batch)[0]
             ).astype(NB_DTYPE)
@@ -220,7 +221,7 @@ class Normalisation:
         """Calculate saturation of region."""
         LOGGER.info("od calculation")
         od = Normalisation.convert_od(
-            img, normalising_c).astype(DEFAULTS["dtype"])
+            img, normalising_c).astype(DEFAULTS.dtype)
         del img
 
         if he_vals is not None:
@@ -231,7 +232,7 @@ class Normalisation:
         y = np.reshape(od, (-1, 3)).T
         del od
 
-        s_cut = np.empty(shape=[2, 0], dtype=DEFAULTS["dtype"])
+        s_cut = np.empty(shape=[2, 0], dtype=DEFAULTS.dtype)
 
         t1 = time()
         LOGGER.info("calculating lstsq in batches (stain saturation)")
@@ -242,7 +243,7 @@ class Normalisation:
         LOGGER.info(f"batches done in {int(t2-t1)} seconds")
 
         max_s = Normalisation.calculate_sp(s_cut)
-        tmp = np.divide(max_s, max_s_ref).astype(DEFAULTS["dtype"])
+        tmp = np.divide(max_s, max_s_ref).astype(DEFAULTS.dtype)
 
         return s_cut, tmp, hem
 
@@ -251,7 +252,7 @@ class Normalisation:
         """Finish saturation normalisation."""
         LOGGER.info("final saturation normalisation")
         saturation = np.divide(
-            s_cut, tmp[:, np.newaxis]).astype(DEFAULTS["dtype"])
+            s_cut, tmp[:, np.newaxis]).astype(DEFAULTS.dtype)
         return saturation
 
     @staticmethod
@@ -265,7 +266,7 @@ class Normalisation:
         if output_type == "norm":
             img = np.multiply(
                 normalising_c, np.exp(-he_ref.dot(
-                    s2).astype(DEFAULTS["dtype"]))
+                    s2).astype(DEFAULTS.dtype))
             )
         else:
             # TODO check if re-definition is less efficient
@@ -277,7 +278,7 @@ class Normalisation:
                 np.exp(
                     np.expand_dims(-he_ref[:, i], axis=1)
                     .dot(np.expand_dims(s2[i, :], axis=0))
-                    .astype(DEFAULTS["dtype"])
+                    .astype(DEFAULTS.dtype)
                 ),
             )
         img = img.astype(np.uint8)
@@ -361,11 +362,11 @@ class SlideTiler:
         for i, location_size in enumerate(cutting_cooridinates):
             mapping[i] = location_size
 
-        if DEFAULTS["first_tile"] == "middle":
+        if DEFAULTS.first_tile == "middle":
             middle_tile = max(mapping.keys()) // 2
             mapping.move_to_end(middle_tile, last=False)
         else:  # TODO implement interactive selection in jupyter
-            mapping.move_to_end(DEFAULTS["first_tile"], last=False)
+            mapping.move_to_end(DEFAULTS.first_tile, last=False)
         return mapping
 
     @staticmethod
@@ -408,7 +409,7 @@ class SlideTiler:
         """Stitch normalised slide tiles (located in the temporary folder) together."""
         LOGGER.info("stitching image together")
         # if libvips stitching is prefered by the user
-        if DEFAULTS["vips_stitcher"]:
+        if DEFAULTS.vips_stitcher:
             SlideTiler.vips_stitcher(*args)
         else:
             SlideTiler.stitcher(*args)
@@ -450,7 +451,7 @@ class SlideTiler:
                     f"{stain_type}_{current_slide.slide_path.stem}")
         Normalisation.save_jpeg(path, image_stitched)
 
-        if DEFAULTS["thumbnail"]:
+        if DEFAULTS.thumbnail:
             SlideTiler.thumbnail_from_np(
                 current_slide, image_stitched, stain_type)
 
@@ -489,7 +490,7 @@ class SlideTiler:
             thumbnail = slide.os_slide.thumbnail_image(twidth, height=theight)
             path = Path(slide.norm_path,
                         f"thumbnail_{slide.slide_path.stem}.jpeg")
-        thumbnail.jpegsave(str(path), Q=DEFAULTS["jpeg_quality"])
+        thumbnail.jpegsave(str(path), Q=DEFAULTS.jpeg_quality)
 
     @staticmethod
     def vips_stitcher(stain_type: str, current_slide: CurrentSlide) -> None:
@@ -520,13 +521,13 @@ class SlideTiler:
         # writes a binary file
         normalised_slide.tiffsave(str(Path(current_slide.norm_path,
                                            f"{stain_type}_{current_slide.slide_path.stem}.tif")),
-                                  compression=DEFAULTS["vips_tiff_compression"],
+                                  compression=DEFAULTS.vips_tiff_compression,
                                   bigtiff=True,
                                   tile=True,
-                                  Q=DEFAULTS["jpeg_quality"])
+                                  Q=DEFAULTS.jpeg_quality)
         LOGGER.info("stitching finished & TIF saved")
 
-        if DEFAULTS["thumbnail"]:
+        if DEFAULTS.thumbnail:
             SlideTiler.thumbnail_from_image(slide=current_slide,
                                             stain_type=stain_type,
                                             slide_extension='tif')
@@ -536,7 +537,7 @@ class SlideTiler:
         """Calculate size of the thumbnail.
         ..given max thumbnail side size and original slide size.
         """
-        scale = DEFAULTS["thumbnail_max_side"] / max(slide_width_height)
+        scale = DEFAULTS.thumbnail_max_side / max(slide_width_height)
         return int(scale * slide_width_height[0]), int(scale * slide_width_height[1])
 
 
@@ -643,7 +644,7 @@ class NormaliseSlides:
             slide_wh, max_side_px)
         LOGGER.total_tiles(self.current_slide.tile_map)
 
-    def repeat_stitching(self, stain_types: Union[str, List[str]] = DEFAULTS["output_type"]) -> None:
+    def repeat_stitching(self, stain_types: Union[str, List[str]] = DEFAULTS.stain_types()) -> None:
         """In case the slide tiles were processed, but the stitching caused a crash
         repeat stitching only.
         """
@@ -686,7 +687,7 @@ class NormaliseSlides:
         thumbnail_path = Path(self.current_slide.norm_path,
                               f"thumbnail_{self.current_slide.slide_path.stem}.jpeg")
         # creates thumbnail only if it is defined in DEFAULTS and if it does not exist already
-        if DEFAULTS["thumbnail"] and not thumbnail_path.exists():
+        if DEFAULTS.thumbnail and not thumbnail_path.exists():
             SlideTiler.thumbnail_from_image(self.current_slide)
         # for the first run of the normaliser on the tile in the middle:
         first_run = True
@@ -707,9 +708,9 @@ class NormaliseSlides:
             first_run = False
         # run tile stitching
         if not single_run:
-            for stain_type in DEFAULTS["output_type"]:
+            for stain_type in DEFAULTS.stain_types():
                 SlideTiler.jpeg_stitcher(stain_type, self.current_slide)
-                if (DEFAULTS["remove_temporary_files"] is True):  # check explicitly for True
+                if (DEFAULTS.remove_temporary_files is True):  # check explicitly for True
                     self.cleaner(stain_type, self.current_slide)
 
     @profile
@@ -724,25 +725,25 @@ class NormaliseSlides:
         if first_run:  # use first slice as a reference for tmp and he calculation
             # TODO check if temp and he are overwritten
             s_cut, self.tmp, self.he = Normalisation.region_s(img,
-                                                              DEFAULTS["normalising_c"],
-                                                              DEFAULTS["alpha"],
-                                                              DEFAULTS["beta"],
-                                                              DEFAULTS["max_s_ref"])
+                                                              DEFAULTS.normalising_c,
+                                                              DEFAULTS.alpha,
+                                                              DEFAULTS.beta,
+                                                              DEFAULTS.max_s_ref)
         else:
             s_cut, _, _ = Normalisation.region_s(img,
-                                                 DEFAULTS["normalising_c"],
-                                                 DEFAULTS["alpha"],
-                                                 DEFAULTS["beta"],
-                                                 DEFAULTS["max_s_ref"],
+                                                 DEFAULTS.normalising_c,
+                                                 DEFAULTS.alpha,
+                                                 DEFAULTS.beta,
+                                                 DEFAULTS.max_s_ref,
                                                  self.he)
         LOGGER.info("s_cut, tmp, calculated")
         c2 = Normalisation.s_final(s_cut, self.tmp)
         del s_cut
         # gc.collect()
-        for stain_type in DEFAULTS["output_type"]:
+        for stain_type in DEFAULTS.stain_types():
             restored_img = Normalisation.image_restore(c2,
-                                                       DEFAULTS["normalising_c"],
-                                                       DEFAULTS["he_ref"],
+                                                       DEFAULTS.normalising_c,
+                                                       DEFAULTS.he_ref,
                                                        size,
                                                        output_type=stain_type)
             LOGGER.info("image restored")
@@ -759,7 +760,7 @@ class NormaliseSlides:
                                              f"{stain_type}_{self.current_slide.slide_path.stem}"),
                                         restored_img)
                 # create additional tile TODO consirer removing?
-                if DEFAULTS["thumbnail"]:
+                if DEFAULTS.thumbnail:
                     SlideTiler.thumbnail_from_np(
                         self.current_slide, restored_img, stain_type)
             del restored_img

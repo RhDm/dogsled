@@ -52,13 +52,13 @@ class GetLibvips:
     def download_dlls(self) -> None:
         """Download libvips .zip, unpacks, checks md5."""
         LOGGER.info("downloading libvips")
-        url = DEFAULTS["libvips_url"]
+        url = DEFAULTS.libvips_url
 
         with urllib.request.urlopen(url) as response, open(self.libvips_zip, "wb") as out_file:
             shutil.copyfileobj(response, out_file)
         # LOGGER.info(GetLibvips.md5_gen(self.libvips_zip))
 
-        if GetLibvips.md5_gen(self.libvips_zip) != DEFAULTS["libvips_md5"]:
+        if GetLibvips.md5_gen(self.libvips_zip) != DEFAULTS.libvips_md5:
             LOGGER.error(
                 "libvips md5 does not match md5 of the downloaded file")
             LOGGER.error("exiting")
