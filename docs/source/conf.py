@@ -3,7 +3,7 @@
 # This file only contains a selection of the most common options. For a full
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
-from importlib.metadata import version
+# from importlib.metadata import version
 from sphinx.locale import _
 
 # -- Path setup --------------------------------------------------------------
@@ -17,15 +17,15 @@ from sphinx.locale import _
 # sys.path.insert(0, os.path.abspath('.'))
 
 
-# -- Project information -----------------------------------------------------
+# -- Project information ----------------------i-------------------------------
 project = 'dogsled'
 copyright = '2021, Dmitri Stepanov'
 author = 'Dmitri Stepanov'
 
 # The full version, including alpha/beta/rc tags
-release = version(project)
-release = '.'.join(release.split('.')[:3])
-
+release = '0.0.5'
+# release = '.'.join(str(version(project)).split('.')[:3])
+# print(type('.'.join(str(version(project)).split('.')[:3])))
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
