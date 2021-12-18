@@ -3,7 +3,7 @@
 # This file only contains a selection of the most common options. For a full
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
-
+from importlib.metadata import version
 from sphinx.locale import _
 
 # -- Path setup --------------------------------------------------------------
@@ -18,14 +18,13 @@ from sphinx.locale import _
 
 
 # -- Project information -----------------------------------------------------
-
 project = 'dogsled'
 copyright = '2021, Dmitri Stepanov'
 author = 'Dmitri Stepanov'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.4'
-
+release = version(project)
+release = '.'.join(release.split('.')[:3])
 
 # -- General configuration ---------------------------------------------------
 

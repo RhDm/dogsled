@@ -170,7 +170,7 @@ class Normalisation:
 
         # eigenvectors are returned in ascending order, largest two are used
         LOGGER.info("projecting OD values onto the plane")
-        projection = od_clean.dot(eigenvecs[:, 1:3].astype(DEFAULTS.dtype))
+        projection = np.dot(od_clean, eigenvecs[:, 1:3].astype(DEFAULTS.dtype))
 
         LOGGER.info("calculation angles of the points")
         angs = np.arctan2(projection[:, 1], projection[:, 0])
@@ -178,10 +178,10 @@ class Normalisation:
         ang_min = np.percentile(angs, alpha)
         ang_max = np.percentile(angs, 100 - alpha)
 
-        c_min = eigenvecs[:, 1:3].dot(
-            np.array([(np.cos(ang_min), np.sin(ang_min))]).T)
-        c_max = eigenvecs[:, 1:3].dot(
-            np.array([(np.cos(ang_max), np.sin(ang_max))]).T)
+        c_min = np.dot(eigenvecs[:, 1:3],
+                       np.array([(np.cos(ang_min), np.sin(ang_min))]).T)
+        c_max = np.dot(eigenvecs[:, 1:3],
+                       np.array([(np.cos(ang_max), np.sin(ang_max))]).T)
 
         if c_min[0] > c_max[0]:
             hem = np.array((c_min[:, 0], c_max[:, 0])).T
@@ -265,8 +265,8 @@ class Normalisation:
         LOGGER.info(f"{output_type} image generation")
         if output_type == "norm":
             img = np.multiply(
-                normalising_c, np.exp(-he_ref.dot(
-                    s2).astype(DEFAULTS.dtype))
+                normalising_c, np.exp(np.dot(-he_ref,
+                                             s2).astype(DEFAULTS.dtype))
             )
         else:
             # TODO check if re-definition is less efficient
@@ -275,11 +275,8 @@ class Normalisation:
                 i = 1
             img = np.multiply(
                 normalising_c,
-                np.exp(
-                    np.expand_dims(-he_ref[:, i], axis=1)
-                    .dot(np.expand_dims(s2[i, :], axis=0))
-                    .astype(DEFAULTS.dtype)
-                ),
+                np.exp(np.dot(np.expand_dims(-he_ref[:, i], axis=1),
+                              np.expand_dims(s2[i, :], axis=0)).astype(DEFAULTS.dtype)),
             )
         img = img.astype(np.uint8)
         img[img > 255] = 254
