@@ -15,6 +15,7 @@ dependencies:
   - numpy=1.21.4
   - scipy=1.7.3
   - numba
+  - numexpr==2.8.0
   - dynaconf
   - pytest>=6
   - pytest-cov=3.0.*

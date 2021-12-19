@@ -10,6 +10,7 @@ from typing import Optional, Union, Any, Tuple, List
 import numpy as np
 import numpy.typing as npt
 import numba as nb
+import numexpr as ne
 
 from dogsled.user_input import FileData
 from dogsled.defaults import DEFAULTS
@@ -141,10 +142,10 @@ class Normalisation:
         return img[..., 0:3].reshape((-1, 3))
 
     @staticmethod
-    @nb.njit
     def convert_od(img, normalising_c):
-        """Normalise the RGB raw values, convert to optical density."""
-        return -np.log((img + 1) / normalising_c)
+        """Normalise the RGB raw values, convert to optical density.
+        Using NumExpr as it in this case it was faster than vanilla NumPy and Numba"""
+        return ne.evaluate('-log((img + 1) / normalising_c)', optimization="aggressive")
 
     # @staticmethod
     # @nb.njit(cache=True)
@@ -399,7 +400,6 @@ class SlideTiler:
     #     image_stitched = np.concatenate(stacked_rows, axis=0)
     #     Normalisation.save_jpeg(Path(current_slide.norm_path, current_slide.slide_path.stem),
     #                             image_stitched)
-
 
     @staticmethod
     def jpeg_stitcher(*args) -> None:

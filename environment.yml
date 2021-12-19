@@ -17,6 +17,7 @@ dependencies:
   - pyvips==2.1.16
   - dynaconf==3.1.7
   - numba
+  - numexpr==2.8.0
   - pytest>=6
   - pytest-cov==3.0.0
   - pip:
