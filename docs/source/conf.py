@@ -23,7 +23,7 @@ copyright = '2021, Dmitri Stepanov'
 author = 'Dmitri Stepanov'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.5'
+release = '0.0.6'
 # release = '.'.join(str(version(project)).split('.')[:3])
 # print(type('.'.join(str(version(project)).split('.')[:3])))
 # -- General configuration ---------------------------------------------------

@@ -29,7 +29,7 @@ NB_DTYPE = DEFAULTS.numba_dtype
 #### pyvips import block ####
 # ugly, but works for windows
 if platform.system() == "Windows":
-    """If pyvips could nor be imported & Windows is used
+    """If pyvips could not be imported & Windows is used
     => download libvips, register DLLs.
     """
     vips_getter = GetLibvips()

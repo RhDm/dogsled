@@ -136,7 +136,7 @@ def test_normalisation(slice_sector_ref, slice_od_ref, slice_he_ref,
 
     np.testing.assert_array_equal(slice_sector_ref, cutout)
     np.testing.assert_array_almost_equal(slice_od_ref, od, decimal=16)
-    np.testing.assert_array_almost_equal(slice_he_ref, he, decimal=12)
+    np.testing.assert_array_almost_equal(slice_he_ref, he, decimal=9)
     np.testing.assert_array_almost_equal(slice_s_cut_ref, s_cut, decimal=6)
     np.testing.assert_array_almost_equal(slice_max_s_ref, max_s, decimal=6)
     np.testing.assert_array_almost_equal(
