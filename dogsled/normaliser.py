@@ -1,24 +1,24 @@
 """Normaliser."""
 import os
-import platform
 import logging
+import platform
 from time import time
-from collections import OrderedDict
 from pathlib import Path
+from collections import OrderedDict
 from typing import Optional, Union, Any, Tuple, List
 
-import numpy as np
-import numpy.typing as npt
 import numba as nb
+import numpy as np
 import numexpr as ne
+import numpy.typing as npt
 
-from dogsled.user_input import FileData
-from dogsled.defaults import DEFAULTS
-from dogsled.errors import CleaningError, UserInputError, LibVipsError
 from dogsled.paths import PathCreator
+from dogsled.defaults import DEFAULTS
 from dogsled.slides import CurrentSlide
+from dogsled.user_input import FileData
 from dogsled.resources import ResourceChecker
 from dogsled.libvips_downloader import GetLibvips
+from dogsled.errors import CleaningError, UserInputError, LibVipsError
 
 LOGGER = logging.getLogger(__name__)
 # not setting the leven in config.py to filter vips etc messages
@@ -490,7 +490,7 @@ class SlideTiler:
         thumbnail.jpegsave(str(path), Q=DEFAULTS.jpeg_quality)
 
     @staticmethod
-    def vips_stitcher(stain_type: str, current_slide: CurrentSlide) -> None:
+    def vips_stitcher(stain_type: str, current_slide: CurrentSlide, jpeg=True) -> None:
         """Use libvips-based pyvips for stitching large slides (40x zoom)."""
         LOGGER.info("stitching using vips")
         LOGGER.info(f"stitching slide: {current_slide.slide_path.name}")
@@ -515,14 +515,22 @@ class SlideTiler:
                                       f"""Aperio Image Library v12.4.0 {normalised_slide.width}x{normalised_slide.height}] | AppMag = {magnification}| MPP={mpp_x}
                 """,
                                       )
-        # writes a binary file
-        normalised_slide.tiffsave(str(Path(current_slide.norm_path,
-                                           f"{stain_type}_{current_slide.slide_path.stem}.tif")),
-                                  compression=DEFAULTS.vips_tiff_compression,
-                                  bigtiff=True,
-                                  tile=True,
-                                  Q=DEFAULTS.jpeg_quality)
-        LOGGER.info("stitching finished & TIF saved")
+        if jpeg:
+            # writes a binary file
+            normalised_slide.write_to_file(str(Path(current_slide.norm_path,
+                                            f"{stain_type}_{current_slide.slide_path.stem}.jpeg")),
+                                            Q=DEFAULTS.jpeg_quality)
+            LOGGER.info("stitching finished & JPEG saved")
+
+        else:
+            # writes a binary file
+            normalised_slide.tiffsave(str(Path(current_slide.norm_path,
+                                            f"{stain_type}_{current_slide.slide_path.stem}.tif")),
+                                    compression=DEFAULTS.vips_tiff_compression,
+                                    bigtiff=True,
+                                    tile=True,
+                                    Q=DEFAULTS.jpeg_quality)
+            LOGGER.info("stitching finished & TIF saved")
 
         if DEFAULTS.thumbnail:
             SlideTiler.thumbnail_from_image(slide=current_slide,
