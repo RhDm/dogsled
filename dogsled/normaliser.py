@@ -517,9 +517,12 @@ class SlideTiler:
                                       )
         if jpeg:
             # writes a binary file
-            normalised_slide.write_to_file(str(Path(current_slide.norm_path,
-                                            f"{stain_type}_{current_slide.slide_path.stem}.jpeg")),
-                                            Q=DEFAULTS.jpeg_quality)
+            normalised_slide.tiffsave(str(Path(current_slide.norm_path,
+                                            f"{stain_type}_{current_slide.slide_path.stem}.tif")),
+                                    compression='jpeg',
+                                    # bigtiff=True,
+                                    tile=True,
+                                    Q=DEFAULTS.jpeg_quality)
             LOGGER.info("stitching finished & JPEG saved")
 
         else:
